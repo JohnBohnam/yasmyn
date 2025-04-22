@@ -90,6 +90,8 @@ export default function MainScreen() {
 
             await uploadImage(imageUri);
 
+            // probably change this to: try to upload, then set imageUri if successful
+
         }
     };
 

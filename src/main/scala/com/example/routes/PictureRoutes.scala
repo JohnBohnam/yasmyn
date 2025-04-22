@@ -30,7 +30,7 @@ class PictureRoutes(pictureRepository: PictureRepository)(implicit system: Actor
 
   val routes: Route = cors() {
     pathPrefix("pictures") {
-      authenticate { userId => // Authentication first
+      authenticate { userId =>
         post {
           fileUpload("image") { case (metadata, byteSource) =>
             val filename = s"${UUID.randomUUID()}-${metadata.fileName}"
@@ -67,6 +67,16 @@ class PictureRoutes(pictureRepository: PictureRepository)(implicit system: Actor
             }
           }
       }
-    }
+    } ~
+      pathPrefix("uploads" / Remaining) { fileName =>
+        get {
+          val filePath = Paths.get("uploads", fileName)
+          if (filePath.toFile.exists()) {
+            getFromFile(filePath.toFile)
+          } else {
+            complete(StatusCodes.NotFound, "File not found")
+          }
+        }
+      }
   }
 }
