@@ -5,9 +5,7 @@
   </component>
   <component name="ChangeListManager">
     <list default="true" id="01c83111-4ee3-4dad-94b3-271b7a07d183" name="Changes" comment="">
-      <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/database.db" beforeDir="false" afterPath="$PROJECT_DIR$/database.db" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/main/scala/com/example/routes/PictureRoutes.scala" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/scala/com/example/routes/PictureRoutes.scala" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/.gitignore" beforeDir="false" afterPath="$PROJECT_DIR$/.gitignore" afterDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
@@ -109,7 +107,7 @@
       <workItem from="1745267958724" duration="10000" />
       <workItem from="1745268621084" duration="2674000" />
       <workItem from="1745273996730" duration="10000" />
-      <workItem from="1745317753825" duration="13862000" />
+      <workItem from="1745317753825" duration="14148000" />
     </task>
     <servers />
   </component>
