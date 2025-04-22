@@ -44,9 +44,39 @@ async function uploadImage(imageUri: string) {
     }
 }
 
+async function fetchEveryonesImages(setOthersImages: React.Dispatch<React.SetStateAction<string[]>>) {
+    try {
+        const authToken = await AsyncStorage.getItem('authToken');
+
+        if (!authToken) {
+            throw new Error('Authentication token is missing');
+        }
+
+        const response = await fetch('http://localhost:8080/pictures', {
+            method: 'GET',
+            headers: {
+                'Authorization': `Bearer ${authToken}`, // only this header is needed
+            },
+        });
+
+        if (!response.ok) {
+            throw new Error(`HTTP error! status: ${response.status}`);
+        }
+
+        const data = await response.json();
+        console.log('Fetched images:', data);
+        const imageUrls = data.map((image: any) => image.filename); // Adjust according to your API response
+        setOthersImages(imageUrls);
+    } catch (error) {
+        console.error('Fetch failed:', error);
+    }
+}
+
 export default function MainScreen() {
     const [topic, setTopic] = useState('');
     const [imageUri, setImageUri] = useState<string | null>(null); // State to store the image URI
+
+    const [othersImages, setOthersImages] = useState<string[]>([]); // State to store others' images
 
     useEffect(() => {
         const fetchTopic = async () => {
@@ -63,6 +93,8 @@ export default function MainScreen() {
         };
 
         fetchTopic();
+
+        fetchEveryonesImages(setOthersImages);
     }, []);
 
     // Request camera roll permissions (important for Expo)
@@ -94,6 +126,7 @@ export default function MainScreen() {
 
         }
     };
+    let imagePrefix = 'http://localhost:8080/uploads/';
 
     return (
         <View style={styles.container}>
@@ -106,6 +139,15 @@ export default function MainScreen() {
             {imageUri && (
                 <Image source={{ uri: imageUri }} style={styles.image} />
             )}
+
+            <Text style={styles.text}>Others' Images:</Text>
+
+            {/* Display all images from others */}
+            {othersImages.map((uri, index) => (
+                <Image key={index} source={{ uri: imagePrefix + uri }} style={styles.image} />
+            ))}
+
+            {/* Add a button to fetch everyone's images */}
         </View>
     );
 }
