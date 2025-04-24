@@ -1,7 +1,22 @@
 import React, { useState, useEffect } from 'react';
-import {View, Text, StyleSheet, Alert, Button, Image, Platform} from 'react-native';
+import {
+    View,
+    Text,
+    StyleSheet,
+    Alert,
+    Button,
+    Image,
+    Platform,
+    ScrollView,
+    SafeAreaView,
+    TouchableOpacity, Dimensions
+} from 'react-native';
 import * as ImagePicker from 'expo-image-picker';
 import AsyncStorage from "@react-native-async-storage/async-storage";
+import {useNavigation} from "@react-navigation/native";
+
+const { width } = Dimensions.get('window');
+const CIRCLE = 80;
 
 async function uploadImage(imageUri: string) {
     try {
@@ -44,39 +59,10 @@ async function uploadImage(imageUri: string) {
     }
 }
 
-async function fetchEveryonesImages(setOthersImages: React.Dispatch<React.SetStateAction<string[]>>) {
-    try {
-        const authToken = await AsyncStorage.getItem('authToken');
-
-        if (!authToken) {
-            throw new Error('Authentication token is missing');
-        }
-
-        const response = await fetch('http://localhost:8080/pictures', {
-            method: 'GET',
-            headers: {
-                'Authorization': `Bearer ${authToken}`, // only this header is needed
-            },
-        });
-
-        if (!response.ok) {
-            throw new Error(`HTTP error! status: ${response.status}`);
-        }
-
-        const data = await response.json();
-        console.log('Fetched images:', data);
-        const imageUrls = data.map((image: any) => image.filename); // Adjust according to your API response
-        setOthersImages(imageUrls);
-    } catch (error) {
-        console.error('Fetch failed:', error);
-    }
-}
-
-export default function MainScreen() {
+// @ts-ignore
+export default function MainScreen({ navigation }) {
     const [topic, setTopic] = useState('');
     const [imageUri, setImageUri] = useState<string | null>(null); // State to store the image URI
-
-    const [othersImages, setOthersImages] = useState<string[]>([]); // State to store others' images
 
     useEffect(() => {
         const fetchTopic = async () => {
@@ -93,8 +79,6 @@ export default function MainScreen() {
         };
 
         fetchTopic();
-
-        fetchEveryonesImages(setOthersImages);
     }, []);
 
     // Request camera roll permissions (important for Expo)
@@ -126,42 +110,117 @@ export default function MainScreen() {
 
         }
     };
-    let imagePrefix = 'http://localhost:8080/uploads/';
 
     return (
-        <View style={styles.container}>
-            <Text style={styles.text}>Today's Topic:</Text>
-            <Text style={styles.topic}>{topic || 'Loading...'}</Text>
+        <SafeAreaView style={styles.safe}>
+            {/* HEADER */}
+            <View style={styles.header}>
+                <TouchableOpacity style={styles.circleButton}>
+                    <Text style={styles.circleText}>My{"\n"}Profile</Text>
+                </TouchableOpacity>
+                <TouchableOpacity style={styles.circleButton}>
+                    <Text style={styles.circleText}>Options</Text>
+                </TouchableOpacity>
+            </View>
 
-            <Button title="Select an Image" onPress={handleSelectImage} />
+            {/* SCROLLABLE BODY */}
+            <ScrollView contentContainerStyle={styles.body}>
+                <Text style={styles.bigTitle}>PICTURE OF THE DAY:</Text>
+                <Text style={styles.topic}>{topic || "Loading..."}</Text>
 
-            {/* Display the selected image */}
-            {imageUri && (
-                <Image source={{ uri: imageUri }} style={styles.image} />
-            )}
+                <TouchableOpacity onPress={handleSelectImage} style={styles.imagePicker}>
+                    {imageUri
+                        ? <Image source={{ uri: imageUri }} style={styles.mainImage} />
+                        : <View style={styles.cameraPlaceholder}><Text>Choose Image</Text></View>}
+                </TouchableOpacity>
 
-            <Text style={styles.text}>Others' Images:</Text>
+                <Text style={styles.timer}>TIME LEFT: 5:23 h</Text>
+            </ScrollView>
 
-            {/* Display all images from others */}
-            {othersImages.map((uri, index) => (
-                <Image key={index} source={{ uri: imagePrefix + uri }} style={styles.image} />
-            ))}
-
-            {/* Add a button to fetch everyone's images */}
-        </View>
+            {/* FOOTER */}
+            <View style={styles.footer}>
+                <TouchableOpacity style={styles.circleButton}
+                                  onPress={() => navigation.navigate('Photos')}>
+                    <Image source={require("../assets/photos.png")} style={styles.imageButton}/>
+                </TouchableOpacity>
+                <TouchableOpacity style={styles.circleButton} >
+                    <Image source={require("../assets/friends.png")} style={styles.imageButton}/>
+                </TouchableOpacity>
+                <TouchableOpacity style={styles.circleButton}>
+                    <Image source={require("../assets/search.png")} style={styles.imageButton}/>
+                </TouchableOpacity>
+            </View>
+        </SafeAreaView>
     );
 }
 
 const styles = StyleSheet.create({
-    container: { flex: 1, justifyContent: 'center', alignItems: 'center' },
-    text: { fontSize: 18, fontWeight: 'bold' },
-    topic: { fontSize: 16, marginTop: 10 },
-    image: {
-        width: 200,
-        height: 200,
-        marginTop: 20,
-        borderRadius: 10,
-        borderWidth: 2,
-        borderColor: '#ccc',
+    safe: { flex: 1, backgroundColor: "#fff" },
+    header: {
+        flexDirection: "row",
+        justifyContent: "space-between",
+        padding: 16
     },
+    circleButton: {
+        width: CIRCLE,
+        height: CIRCLE,
+        alignItems: "center",
+        justifyContent: "center"
+    },
+    circleText: {
+        fontSize: 12,
+        textAlign: "center"
+    },
+    body: {
+        alignItems: "center",
+        paddingVertical: 20,
+        paddingHorizontal: 16,
+        flex: 1
+    },
+    bigTitle: {
+        fontSize: 18,
+        fontWeight: "bold",
+        marginBottom: 4
+    },
+    topic: {
+        fontSize: 16,
+        marginBottom: 20
+    },
+    imagePicker: {
+        width: width * 0.5,
+        height: width * 0.5,
+        maxWidth: 500,
+        maxHeight: 500,
+        borderRadius: (width * 0.5) / 2,
+        borderWidth: 2,
+        borderColor: "#000",
+        overflow: "hidden",
+        alignItems: "center",
+        justifyContent: "center",
+        marginBottom: 12
+    },
+    cameraPlaceholder: {
+        alignItems: "center",
+        justifyContent: "center"
+    },
+    mainImage: {
+        width: "100%",
+        height: "100%"
+    },
+    timer: {
+        fontSize: 14,
+        marginTop: 8
+    },
+    footer: {
+        flexDirection: "row",
+        justifyContent: "space-around",
+        paddingVertical: 16,
+        borderTopWidth: 1,
+        borderColor: "#ccc"
+    },
+    imageButton: {
+        width: CIRCLE,
+        height: CIRCLE
+    }
+
 });
