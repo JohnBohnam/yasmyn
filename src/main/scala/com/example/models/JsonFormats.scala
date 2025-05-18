@@ -51,7 +51,7 @@ object JsonFormats extends DefaultJsonProtocol {
   }
 
   // Now the Picture format — placed after Timestamp & UUID implicits
-  implicit val pictureFormat: RootJsonFormat[Picture] = jsonFormat4(Picture)
+  implicit val pictureFormat: RootJsonFormat[Picture] = jsonFormat5(Picture)
 
   // Error response format
   implicit val errorFormat: RootJsonFormat[ErrorResponse] = jsonFormat2(ErrorResponse)
@@ -60,3 +60,5 @@ object JsonFormats extends DefaultJsonProtocol {
 }
 
 case class ErrorResponse(error: String, details: Option[String] = None)
+
+case class PhaseStatus(isUploading: Boolean, timeLeft: Long)

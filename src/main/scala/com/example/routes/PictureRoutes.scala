@@ -10,7 +10,8 @@ import akka.http.scaladsl.server.Directives._
 import akka.http.scaladsl.server.Route
 import akka.stream.Materializer
 import ch.megard.akka.http.cors.scaladsl.CorsDirectives.cors
-import com.example.models.Picture
+import com.example.Globals
+import com.example.models.{PhaseStatus, Picture}
 import com.example.repositories.PictureRepository
 import com.example.utils.AuthUtils
 
@@ -26,7 +27,7 @@ class PictureRoutes(pictureRepository: PictureRepository)(implicit system: Actor
   // Make sure you have a Materializer available implicitly
   implicit val materializer: Materializer = Materializer(system)
 
-  implicit val pictureFormat = jsonFormat4(Picture)
+  implicit val pictureFormat = jsonFormat5(Picture)
 
   val routes: Route = cors() {
     pathPrefix("pictures") {
@@ -43,8 +44,8 @@ class PictureRoutes(pictureRepository: PictureRepository)(implicit system: Actor
             }
           }
         } ~
-          (get & parameters("limit".as[Int].withDefault(20), "afterId".as[Long].?)) { (limit, afterId) =>
-            onComplete(pictureRepository.getAllPictures(limit, afterId)) {
+          (get & parameters("limit".as[Int].withDefault(20), "afterId".as[Long].?, "archived".as[Boolean].withDefault(true))) { (limit, afterId, archived) =>
+            onComplete(pictureRepository.getAllPictures(limit, afterId, archived)) {
               case Success(pictures) => complete(StatusCodes.OK, pictures)
               case Failure(ex) =>
                 complete(StatusCodes.InternalServerError, s"Error fetching all pictures: ${ex.getMessage}")
@@ -76,6 +77,12 @@ class PictureRoutes(pictureRepository: PictureRepository)(implicit system: Actor
           } else {
             complete(StatusCodes.NotFound, "File not found")
           }
+        }
+      } ~
+      pathPrefix("phase") {
+        get {
+          implicit val phaseStatusFormat = jsonFormat2(PhaseStatus)
+          complete(StatusCodes.OK, PhaseStatus(Globals.isUploading, Globals.timeLeft))
         }
       }
   }

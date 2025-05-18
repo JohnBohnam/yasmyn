@@ -7,5 +7,6 @@ case class Picture(
                     id: Long,
                     userId: Long,
                     filename: String,
-                    createdAt: Timestamp
+                    createdAt: Timestamp,
+                    archived: Boolean
                   ) extends Serializable

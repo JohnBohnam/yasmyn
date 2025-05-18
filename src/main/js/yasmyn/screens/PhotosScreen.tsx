@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from 'react';
+import React, {useEffect, useLayoutEffect, useState} from 'react';
 import {
     View,
     FlatList,
@@ -46,15 +46,16 @@ async function fetchEveryonesImages(setOthersImages: React.Dispatch<React.SetSta
     }
 }
 
-const PhotosScreen = () => {
+const PhotosScreen = ({ route } : any) => {
     const [othersImages, setOthersImages] = useState<string[]>([]);
     const [loading, setLoading] = useState(true);
-
-
+    const { isVoting } = route.params;
 
     useEffect(() => {
         fetchEveryonesImages(setOthersImages, setLoading);
     }, []);
+
+    console.log(isVoting)
 
     // Render each photo
     let imagePrefix = 'http://localhost:8080/uploads/';
@@ -113,6 +114,12 @@ const styles = StyleSheet.create({
         width: '100%',
         height: '100%',
         resizeMode: 'cover',
+    },
+    imageOverlay: {
+        height: SCREEN_HEIGHT,
+        ...StyleSheet.absoluteFillObject,
+        backgroundColor: 'rgba(122, 33, 0, 0.3)', // Dark filter
+        borderRadius: 10,
     },
 });
 

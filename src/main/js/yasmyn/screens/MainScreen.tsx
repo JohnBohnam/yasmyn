@@ -63,6 +63,9 @@ async function uploadImage(imageUri: string) {
 export default function MainScreen({ navigation }) {
     const [topic, setTopic] = useState('');
     const [imageUri, setImageUri] = useState<string | null>(null); // State to store the image URI
+    const [isUploadPhase, setPhase] = useState<boolean | null>(null);
+    const [timeLeft, setTimeLeft] = useState<number>(0);
+
 
     useEffect(() => {
         const fetchTopic = async () => {
@@ -79,6 +82,29 @@ export default function MainScreen({ navigation }) {
         };
 
         fetchTopic();
+    }, []);
+
+    useEffect(() => {
+        const fetchPhaseAndTime = async () => {
+            try {
+                const response = await fetch('http://localhost:8080/phase');
+                if (!response.ok) {
+                    throw new Error(`HTTP error! status: ${response.status}`);
+                }
+                const data = await response.json();
+                setPhase(data.isUploading);
+                console.log(data.isUploading)
+                setTimeLeft(data.timeLeft);
+                console.log(data)
+            } catch (err: any) {
+                Alert.alert('Error', err.message);
+            }
+        };
+        const time = Math.min(10000, timeLeft*1000);
+        const interval = setInterval(fetchPhaseAndTime, time);
+
+        // Cleanup interval when component unmounts
+        return () => clearInterval(interval);
     }, []);
 
     // Request camera roll permissions (important for Expo)
@@ -111,6 +137,15 @@ export default function MainScreen({ navigation }) {
         }
     };
 
+    function formatTime(seconds: number): string {
+        const hours = Math.floor(seconds / 3600)
+        const minutes = Math.floor((seconds % 3600) / 60)
+        const secondsLeft = seconds % 60
+
+        const pad = (n: number) => n.toString().padStart(2, '0')
+        return `${pad(hours)}:${pad(minutes)}:${pad(secondsLeft)}`
+    }
+
     return (
         <SafeAreaView style={styles.safe}>
             {/* HEADER */}
@@ -125,22 +160,23 @@ export default function MainScreen({ navigation }) {
 
             {/* SCROLLABLE BODY */}
             <ScrollView contentContainerStyle={styles.body}>
-                <Text style={styles.bigTitle}>PICTURE OF THE DAY:</Text>
+                {isUploadPhase ? <Text style={styles.bigTitle}> PICTURE OF THE DAY:</Text> :
+                <Text style={styles.bigTitle}>NO UPLOADS, VOTE IN PHOTOS SECTION</Text>}
                 <Text style={styles.topic}>{topic || "Loading..."}</Text>
 
-                <TouchableOpacity onPress={handleSelectImage} style={styles.imagePicker}>
+                <TouchableOpacity onPress={handleSelectImage} style={styles.imagePicker} disabled={!isUploadPhase!}>
                     {imageUri
                         ? <Image source={{ uri: imageUri }} style={styles.mainImage} />
                         : <View style={styles.cameraPlaceholder}><Text>Choose Image</Text></View>}
                 </TouchableOpacity>
 
-                <Text style={styles.timer}>TIME LEFT: 5:23 h</Text>
+                <Text style={styles.timer}>TIME LEFT: {formatTime(timeLeft)}</Text>
             </ScrollView>
 
             {/* FOOTER */}
             <View style={styles.footer}>
                 <TouchableOpacity style={styles.circleButton}
-                                  onPress={() => navigation.navigate('Photos')}>
+                                  onPress={() => navigation.navigate("Photos", { isVoting: !isUploadPhase })}>
                     <Image source={require("../assets/photos.png")} style={styles.imageButton}/>
                 </TouchableOpacity>
                 <TouchableOpacity style={styles.circleButton} >

@@ -9,7 +9,8 @@ class PictureTable(tag: Tag) extends Table[Picture](tag, "pictures") {
   def userId = column[Long]("user_id")
   def filename = column[String]("filename")
   def createdAt = column[java.sql.Timestamp]("created_at", O.Default(new java.sql.Timestamp(System.currentTimeMillis())))
-  def * = (id, userId, filename, createdAt).mapTo[Picture]
+  def archived = column[Boolean]("archived", O.Default(false))
+  def * = (id, userId, filename, createdAt, archived).mapTo[Picture]
   def user = foreignKey("user_fk", userId, UserTable.users)(_.id)
 }
 
