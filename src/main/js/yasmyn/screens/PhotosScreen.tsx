@@ -1,4 +1,4 @@
-import React, {useEffect, useLayoutEffect, useState} from 'react';
+import React, { useEffect, useLayoutEffect, useState } from 'react';
 import {
     View,
     FlatList,
@@ -12,11 +12,20 @@ import {
     ScrollView
 } from 'react-native';
 import AsyncStorage from "@react-native-async-storage/async-storage";
+import PostTile from '../tiles/PostTile';
+import { Post } from '../Model';
 
 
 const { height: SCREEN_HEIGHT } = Dimensions.get('window');
 
-async function fetchEveryonesImages(setOthersImages: React.Dispatch<React.SetStateAction<string[]>>, setLoading: React.Dispatch<React.SetStateAction<boolean>>) {
+function parsePostDates(post: any) {
+  return {
+    ...post,
+    createdAt: new Date(post.createdAt),
+  };
+}
+
+async function fetchEveryonesImages(setOthersPosts: React.Dispatch<React.SetStateAction<Post[]>>, setLoading: React.Dispatch<React.SetStateAction<boolean>>) {
     try {
         const authToken = await AsyncStorage.getItem('authToken');
 
@@ -24,7 +33,7 @@ async function fetchEveryonesImages(setOthersImages: React.Dispatch<React.SetSta
             throw new Error('Authentication token is missing');
         }
 
-        const response = await fetch('http://localhost:8080/pictures', {
+        const response = await fetch('http://localhost:8080/posts', {
             method: 'GET',
             headers: {
                 'Authorization': `Bearer ${authToken}`,
@@ -36,8 +45,9 @@ async function fetchEveryonesImages(setOthersImages: React.Dispatch<React.SetSta
         }
 
         const data = await response.json();
-        const imageUrls = data.map((image: any) => image.filename);
-        setOthersImages(imageUrls);
+        const posts = data.map(parsePostDates) as Post[];
+        console.log('Fetched posts:', posts);
+        setOthersPosts(posts);
     } catch (error) {
         console.error('Fetch failed:', error);
         Alert.alert('Error fetching images', String(error));
@@ -46,24 +56,32 @@ async function fetchEveryonesImages(setOthersImages: React.Dispatch<React.SetSta
     }
 }
 
-const PhotosScreen = ({ route } : any) => {
-    const [othersImages, setOthersImages] = useState<string[]>([]);
+const PhotosScreen = ({ route }: any) => {
+    const [othersPosts, setOthersPosts] = useState<Post[]>([]);
     const [loading, setLoading] = useState(true);
     const { isVoting } = route.params;
 
     useEffect(() => {
-        fetchEveryonesImages(setOthersImages, setLoading);
+        fetchEveryonesImages(setOthersPosts, setLoading);
     }, []);
 
     console.log(isVoting)
 
     // Render each photo
-    let imagePrefix = 'http://localhost:8080/uploads/';
-    const renderItem = ({ item }: { item: string }) => (
-        <View style={styles.imageContainer}>
-            <Image source={{ uri: imagePrefix + item }} style={styles.image} />
-        </View>
+    // const renderItem = ({ item }: { item: string }) => (
+    //     <View style={styles.imageContainer}>
+    //         <Image source={{ uri: imagePrefix + item }} style={styles.image} />
+    //     </View>
+    // );
+
+    const authToken = AsyncStorage.getItem('authToken');
+    // if (!authToken)
+
+    const renderItem = ({ item }: { item: Post }) => (
+        <PostTile post={item} />
     );
+
+
 
     if (loading) {
         return <ActivityIndicator size="large" color="#0000ff" />;
@@ -72,30 +90,36 @@ const PhotosScreen = ({ route } : any) => {
     if (Platform.OS === 'web') {
         return (
             <ScrollView style={styles.webScroller}>
-                {othersImages.map((item, index) => (
-                    <View key={index.toString()} style={styles.imageContainer}>
-                        <Image source={{ uri: imagePrefix + item }} style={styles.image} />
-                    </View>
+                {othersPosts.map((item, index) => (
+                    // <View key={index.toString()} style={styles.imageContainer}>
+                    //     <Image source={{ uri: imagePrefix + item }} style={styles.image} />
+                    // </View>
+                    console.log(item),
+                    renderItem({ item: item })
                 ))}
             </ScrollView>
         );
     }
 
     return (
-        <FlatList
-            data={othersImages}
-            keyExtractor={(item, index) => index.toString()}
-            renderItem={renderItem}
-            contentContainerStyle={styles.listContainer}
-            showsVerticalScrollIndicator={false}
-            pagingEnabled={true}
-            snapToInterval={SCREEN_HEIGHT}
-            snapToAlignment="start"
-            decelerationRate="fast"
-            getItemLayout={(data, index) => (
-                { length: SCREEN_HEIGHT, offset: SCREEN_HEIGHT * index, index }
-            )}
-        />
+        <View>
+            <Text>Hello</Text>
+            <FlatList
+                data={othersPosts}
+                keyExtractor={(item, index) => index.toString()}
+                renderItem={renderItem}
+                contentContainerStyle={styles.listContainer}
+                showsVerticalScrollIndicator={false}
+                pagingEnabled={true}
+                snapToInterval={SCREEN_HEIGHT}
+                snapToAlignment="start"
+                decelerationRate="fast"
+                getItemLayout={(data, index) => (
+                    { length: SCREEN_HEIGHT, offset: SCREEN_HEIGHT * index, index }
+                )}
+            />  
+        </View>
+        
     );
 };
 

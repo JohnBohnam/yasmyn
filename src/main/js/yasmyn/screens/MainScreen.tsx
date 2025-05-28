@@ -18,13 +18,10 @@ import {useNavigation} from "@react-navigation/native";
 const { width } = Dimensions.get('window');
 const CIRCLE = 80;
 
-async function uploadImage(imageUri: string) {
+async function uploadImage(imageUri: string, setImageUri: (uri: string | null) => void) {
     try {
         const authToken = await AsyncStorage.getItem('authToken');
-
-        if (!authToken) {
-            throw new Error('Authentication token is missing');
-        }
+        if (!authToken) throw new Error('Authentication token is missing');
 
         const formData = new FormData();
 
@@ -40,24 +37,31 @@ async function uploadImage(imageUri: string) {
             } as any);
         }
 
-        const response = await fetch('http://localhost:8080/pictures', {
+        const response = await fetch('http://localhost:8080/posts', {
             method: 'POST',
             body: formData,
             headers: {
-                'Authorization': `Bearer ${authToken}`, // only this header is needed
+                'Authorization': `Bearer ${authToken}`,
             },
         });
 
         if (!response.ok) {
-            throw new Error(`HTTP error! status: ${response.status}`);
+            const errText = await response.text();
+            throw new Error(`Upload failed: ${response.status} - ${errText}`);
         }
 
-        const data = await response.text();
-        console.log('Upload successful:', data);
-    } catch (error) {
-        console.error('Upload failed:', error);
+        const data = await response.json();
+
+        setImageUri(imageUri); // Set image only if upload was successful
+        Alert.alert('Success', 'Image uploaded successfully!');
+
+    } catch (error: any) {
+        console.error('Upload failed:', error.message);
+        Alert.alert('Error', error.message);
+        setImageUri(null); // Clear image if upload failed
     }
 }
+
 
 // @ts-ignore
 export default function MainScreen({ navigation }) {
@@ -84,6 +88,7 @@ export default function MainScreen({ navigation }) {
         fetchTopic();
     }, []);
 
+    // to sie kreci jak pojebane
     useEffect(() => {
         const fetchPhaseAndTime = async () => {
             try {
@@ -93,9 +98,7 @@ export default function MainScreen({ navigation }) {
                 }
                 const data = await response.json();
                 setPhase(data.isUploading);
-                console.log(data.isUploading)
                 setTimeLeft(data.timeLeft);
-                console.log(data)
             } catch (err: any) {
                 Alert.alert('Error', err.message);
             }
@@ -119,23 +122,19 @@ export default function MainScreen({ navigation }) {
 
     // Function to handle image selection
     const handleSelectImage = async () => {
-        let result = await ImagePicker.launchImageLibraryAsync({
-            mediaTypes: ImagePicker.MediaTypeOptions.Images,
-            allowsEditing: true,
-            aspect: [4, 3],
-            quality: 1,
-        });
+    let result = await ImagePicker.launchImageLibraryAsync({
+        mediaTypes: ImagePicker.MediaTypeOptions.Images,
+        allowsEditing: true,
+        aspect: [4, 3],
+        quality: 1,
+    });
 
-        if (!result.canceled) {
-            let imageUri = result.assets[0].uri;
-            setImageUri(imageUri);
+    if (!result.canceled) {
+        const uri = result.assets[0].uri;
+        await uploadImage(uri, setImageUri); // Upload and only then show
+    }
+};
 
-            await uploadImage(imageUri);
-
-            // probably change this to: try to upload, then set imageUri if successful
-
-        }
-    };
 
     function formatTime(seconds: number): string {
         const hours = Math.floor(seconds / 3600)
