@@ -37,4 +37,12 @@ class UserRepository(implicit ec: ExecutionContext) {
       case _ => Future.successful(None)
     }
   }
+
+  def findById(id: Long): Future[Option[User]] = {
+    val query = UserTable.users.filter(_.id === id)
+    db.run(query.result.headOption).map {
+      case Some(user) => Some(user)
+      case None => None
+    }
+  }
 }

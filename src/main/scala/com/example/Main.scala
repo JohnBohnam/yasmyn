@@ -1,15 +1,16 @@
 package com.example
 
-import slick.jdbc.SQLiteProfile.api._
 import akka.actor.ActorSystem
 import akka.http.scaladsl.Http
 import akka.stream.Materializer
+import com.example.config.DatabaseConfig
 import com.example.config.DatabaseConfig.db
-import com.example.config.{AppConfig, DatabaseConfig}
-import com.example.database.tables.{PictureTable, UserTable}
-import com.example.repositories.{PictureRepository, UserRepository}
-import com.example.routes.{AppRoutes, AuthRoutes, PictureRoutes, TopicRoutes}
+import com.example.database.tables._
+import com.example.repositories._
+import com.example.routes._
+import com.example.service.PostService
 import com.example.time.TimeKeeper
+import slick.jdbc.SQLiteProfile.api._
 
 import java.util.concurrent.{Executors, TimeUnit}
 import scala.concurrent.ExecutionContextExecutor
@@ -22,17 +23,27 @@ object Main extends App {
   // Initialize dependencies
   val userRepository = new UserRepository()
   val pictureRepository = new PictureRepository()
+  val postRepository = new PostRepository()
+  val commentRepository = new CommentRepository()
+  val likeRepository = new LikeRepository()
 
   // Create tables
   DatabaseConfig.db.run(
-    (UserTable.users.schema ++ PictureTable.pictures.schema).createIfNotExists
+    (UserTable.users.schema ++
+      PictureTable.pictures.schema ++
+      PostTable.posts.schema ++
+      LikeTable.likes.schema ++
+      CommentTable.comments.schema
+      ).createIfNotExists
   )
 
   // Setup routes
   val authRoutes = new AuthRoutes(userRepository)
   val pictureRoutes = new PictureRoutes(pictureRepository)
   val topicRoutes = new TopicRoutes(pictureRepository)
-  val appRoutes = new AppRoutes(authRoutes, pictureRoutes, topicRoutes).routes
+  val postService = new PostService(userRepository, pictureRepository, commentRepository, likeRepository)
+  val postRoutes = new PostRoutes(pictureRepository, postRepository, postService, likeRepository)
+  val appRoutes = new AppRoutes(authRoutes, pictureRoutes, topicRoutes, postRoutes).routes
 
 
   // Shutdown hook to close the database connection

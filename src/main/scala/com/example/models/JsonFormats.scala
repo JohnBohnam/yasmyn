@@ -1,5 +1,6 @@
 package com.example.models
 
+import com.example.models.response.PostResponse
 import spray.json._
 
 import java.sql.Timestamp
@@ -56,6 +57,8 @@ object JsonFormats extends DefaultJsonProtocol {
   // Error response format
   implicit val errorFormat: RootJsonFormat[ErrorResponse] = jsonFormat2(ErrorResponse)
 
+  implicit val commentFormat: RootJsonFormat[Comment]  = jsonFormat5(Comment)
+  implicit val postResponseFormat: RootJsonFormat[PostResponse] = jsonFormat6(PostResponse)
 
 }
 

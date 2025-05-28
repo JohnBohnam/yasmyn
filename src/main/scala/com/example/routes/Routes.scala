@@ -5,9 +5,10 @@ import akka.http.scaladsl.server.Directives._
 
 import scala.concurrent.ExecutionContext
 
-class AppRoutes(authRoutes: AuthRoutes, pictureRoutes: PictureRoutes, topicRoutes: TopicRoutes)(implicit ec: ExecutionContext) {
+class AppRoutes(authRoutes: AuthRoutes, pictureRoutes: PictureRoutes, topicRoutes: TopicRoutes, postRoutes: PostRoutes)(implicit ec: ExecutionContext) {
   val routes: Route =
     authRoutes.routes ~
       pictureRoutes.routes ~
-      topicRoutes.routes
+      topicRoutes.routes ~
+      postRoutes.routes
 }

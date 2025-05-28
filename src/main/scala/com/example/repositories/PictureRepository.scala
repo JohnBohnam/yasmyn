@@ -13,7 +13,10 @@ class PictureRepository(implicit ec: ExecutionContext) {
     val action = (PictureTable.pictures returning PictureTable.pictures.map(_.id)) += picture
 
     db.run(action)
-      .map(id => picture.copy(id = id))
+      .map(id => {
+        println(s"Picture created with ID: $id")
+        picture.copy(id = id)
+      })
       .recoverWith {
         case ex: Exception if ex.getMessage.contains("FOREIGN KEY") =>
           Future.failed(new IllegalArgumentException("User does not exist"))
@@ -47,6 +50,15 @@ class PictureRepository(implicit ec: ExecutionContext) {
 
     db.run(filteredQuery.result)
   }
+
+  def findById(id: Long): Future[Option[Picture]] = {
+    val query = PictureTable.pictures.filter(_.id === id)
+    db.run(query.result.headOption).map {
+      case Some(picture) => Some(picture)
+      case None => None
+    }
+  }
+
 
 
 }
