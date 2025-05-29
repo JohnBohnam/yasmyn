@@ -7,7 +7,7 @@ import akka.http.scaladsl.server.Directives._
 import akka.http.scaladsl.server.Route
 import akka.stream.Materializer
 import ch.megard.akka.http.cors.scaladsl.CorsDirectives.cors
-import com.example.config.AppConfig.corsSettings
+import com.example.config.AuthConfig.corsSettings
 import com.example.models.JsonFormats._
 import com.example.models.Post
 import com.example.models.response.PostResponse

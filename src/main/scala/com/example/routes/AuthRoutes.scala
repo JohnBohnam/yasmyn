@@ -3,7 +3,7 @@ package com.example.routes
 import akka.http.scaladsl.marshallers.sprayjson.SprayJsonSupport._
 import akka.http.scaladsl.server.Directives._
 import akka.http.scaladsl.server.Route
-import com.example.config.AppConfig.corsSettings
+import com.example.config.AuthConfig.corsSettings
 import com.example.models.{LoginRequest, UserRegistrationRequest}
 import com.example.repositories.UserRepository
 import com.example.utils.AuthUtils
