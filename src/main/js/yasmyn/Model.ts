@@ -17,6 +17,12 @@ export interface Comment {
   createdAt: string;
 }
 
+export interface Topic {
+  id: number;
+  content: string;
+  activeDate: string;
+}
+
 export interface Post {
   id: number;
   user: User;
@@ -24,4 +30,6 @@ export interface Post {
   createdAt: Date;
   likes: number;
   comments: Comment[];
+  topic: Topic;
+  isLiked: boolean; 
 }
