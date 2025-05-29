@@ -17,6 +17,8 @@ class LikeTable(tag: Tag) extends Table[Like](tag, "likes") {
   def user = foreignKey("user_fk", userId, UserTable.users)(_.id)
 
   def post = foreignKey("post_fk", postId, PostTable.posts)(_.id)
+
+  def uniqueLike = index("idx_unique_user_post", (userId, postId), unique = true)
 }
 
 object LikeTable {

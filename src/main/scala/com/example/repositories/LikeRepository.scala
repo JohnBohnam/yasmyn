@@ -17,6 +17,22 @@ class LikeRepository(implicit ec: ExecutionContext) {
       .map(id => like.copy(id = id))
   }
 
+  def isPostLikedByUser(userId: Long, postId: Long): Future[Boolean] = {
+    val query = LikeTable.likes
+      .filter(like => like.userId === userId && like.postId === postId)
+      .exists
+
+    db.run(query.result)
+  }
+
+  def unlikePost(userId: Long, postId: Long): Future[Int] = {
+    val query = LikeTable.likes
+      .filter(like => like.userId === userId && like.postId === postId)
+      .delete
+
+    db.run(query)
+  }
+
   def getByPostId(postId: Long, limit: Int, afterId: Option[Long]): Future[Seq[Like]] = {
     val query = afterId match {
       case Some(id) => LikeTable.likes

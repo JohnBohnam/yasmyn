@@ -82,14 +82,33 @@ class PostRoutes(pictureRepository: PictureRepository, postRepository: PostRepos
                 complete(StatusCodes.InternalServerError, s"Error fetching all posts: ${ex.getMessage}")
             }
           } ~
-        path(LongNumber / "likes") { postId =>
-          post {
-            onComplete(likeRepository.likePost(userId, postId)) {
-              case Success(_) => complete(StatusCodes.OK, "Post liked")
-              case Failure(ex) => complete(StatusCodes.InternalServerError, s"Failed to like post: ${ex.getMessage}")
-            }
-          } //TODO: implement unlike functionality and make likes unique per user (no duplicate likes)
-        } ~
+          path(LongNumber / "likes") { postId =>
+            post {
+              onComplete(likeRepository.isPostLikedByUser(userId, postId)) {
+                case Success(true) =>
+                  complete(StatusCodes.Conflict, "Post already liked")
+                case Success(false) =>
+                  onComplete(likeRepository.likePost(userId, postId)) {
+                    case Success(_) =>
+                      complete(StatusCodes.OK, "Post liked")
+                    case Failure(ex) =>
+                      complete(StatusCodes.InternalServerError, s"Failed to like post: ${ex.getMessage}")
+                  }
+                case Failure(ex) =>
+                  complete(StatusCodes.InternalServerError, s"Failed to check like status: ${ex.getMessage}")
+              }
+            } ~
+              delete {
+                onComplete(likeRepository.unlikePost(userId, postId)) {
+                  case Success(0) =>
+                    complete(StatusCodes.NotFound, "Like not found")
+                  case Success(_) =>
+                    complete(StatusCodes.OK, "Post unliked")
+                  case Failure(ex) =>
+                    complete(StatusCodes.InternalServerError, s"Failed to unlike post: ${ex.getMessage}")
+                }
+              }
+          } ~
         path(LongNumber / "comments") { postId =>
           complete(StatusCodes.MethodNotAllowed, "Commenting on posts is not implemented yet")
           // TODO

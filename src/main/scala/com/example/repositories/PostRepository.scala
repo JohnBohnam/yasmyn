@@ -33,13 +33,13 @@ class PostRepository(implicit ec: ExecutionContext) {
   }
 
   def getAllPosts(limit: Int, afterId: Option[Long], archived: Boolean): Future[Seq[Post]] = {
-    val baseQuery = PostTable.posts.filter(_.archived === archived)
+    val baseQuery = PostTable.posts//.filter(_.archived === archived)
 
     val filteredQuery = afterId match {
       case Some(id) =>
-        baseQuery.filter(_.id > id).sortBy(_.id.desc).take(limit)
+        baseQuery//.filter(_.id > id).sortBy(_.id.desc).take(limit)
       case None =>
-        baseQuery.sortBy(_.id.desc).take(limit)
+        baseQuery//.sortBy(_.id.desc).take(limit)
     }
 
     db.run(filteredQuery.result)
