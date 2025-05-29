@@ -14,11 +14,15 @@ class PostTable(tag: Tag) extends Table[Post](tag, "posts") {
 
   def archived = column[Boolean]("archived", O.Default(false))
 
-  def * = (id, userId, pictureId, createdAt, archived).mapTo[Post]
+  def topicId = column[Long]("topic_id", O.Default(0L))
+
+  def * = (id, userId, pictureId, createdAt, archived, topicId).mapTo[Post]
 
   def user = foreignKey("user_fk", userId, UserTable.users)(_.id)
 
   def picture = foreignKey("picture_fk", pictureId, PictureTable.pictures)(_.id)
+
+  def topic = foreignKey("topic_fk", topicId, TopicTable.topics)(_.id)
 }
 
 object PostTable {

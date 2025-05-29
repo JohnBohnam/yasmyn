@@ -9,8 +9,8 @@ import scala.concurrent.{ExecutionContext, Future}
 
 class PostRepository(implicit ec: ExecutionContext) {
 
-  def createPost(userId: Long, pictureId: Long): Future[Post] = {
-    val post = Post(-1, userId, pictureId, new java.sql.Timestamp(System.currentTimeMillis()), archived = false)
+  def createPost(userId: Long, pictureId: Long, topicId: Long): Future[Post] = {
+    val post = Post(-1, userId, pictureId, new java.sql.Timestamp(System.currentTimeMillis()), archived = false, topicId)
     val action = (PostTable.posts returning PostTable.posts.map(_.id)) += post
 
     db.run(action)
@@ -33,13 +33,13 @@ class PostRepository(implicit ec: ExecutionContext) {
   }
 
   def getAllPosts(limit: Int, afterId: Option[Long], archived: Boolean): Future[Seq[Post]] = {
-    val baseQuery = PostTable.posts//.filter(_.archived === archived)
+    val baseQuery = PostTable.posts //.filter(_.archived === archived)
 
     val filteredQuery = afterId match {
       case Some(id) =>
-        baseQuery//.filter(_.id > id).sortBy(_.id.desc).take(limit)
+        baseQuery //.filter(_.id > id).sortBy(_.id.desc).take(limit)
       case None =>
-        baseQuery//.sortBy(_.id.desc).take(limit)
+        baseQuery //.sortBy(_.id.desc).take(limit)
     }
 
     db.run(filteredQuery.result)

@@ -13,33 +13,38 @@ class PostService(
                    userRepository: UserRepository,
                    pictureRepository: PictureRepository,
                    commentRepository: CommentRepository,
-                   likeRepository: LikeRepository
+                   likeRepository: LikeRepository,
+                   topicRepository: TopicRepository
                  )(implicit ec: ExecutionContext) {
 
   private val formatter = DateTimeFormatter.ISO_INSTANT
 
   def toPostResponse(post: Post): Future[Option[PostResponse]] = {
-    val userF     = userRepository.findById(post.userId)
-    val pictureF  = pictureRepository.findById(post.pictureId)
+    val userF = userRepository.findById(post.userId)
+    val pictureF = pictureRepository.findById(post.pictureId)
     val commentsF = commentRepository.findByPostId(post.id)
-    val likesF    = likeRepository.countByPostId(post.id)
+    val likesF = likeRepository.countByPostId(post.id)
+    val topicF = topicRepository.getTopicById(post.topicId)
 
     for {
-      userOpt    <- userF
+      userOpt <- userF
       pictureOpt <- pictureF
-      comments   <- commentsF
-      likes      <- likesF
+      comments <- commentsF
+      likes <- likesF
+      topicOpt <- topicF
     } yield {
       for {
-        user    <- userOpt
+        user <- userOpt
         picture <- pictureOpt
+        topic <- topicOpt
       } yield PostResponse(
-        id        = post.id,
-        user      = user,
-        picture   = picture,
+        id = post.id,
+        user = user,
+        picture = picture,
         createdAt = formatTimestamp(post.createdAt),
-        likes     = likes,
-        comments  = comments
+        likes = likes,
+        comments = comments,
+        topic = topic
       )
     }
   }

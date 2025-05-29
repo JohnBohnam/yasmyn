@@ -42,8 +42,8 @@ object Main extends App {
   val authRoutes = new AuthRoutes(userRepository)
   val pictureRoutes = new PictureRoutes(pictureRepository)
   val topicRoutes = new TopicRoutes(topicRepository)
-  val postService = new PostService(userRepository, pictureRepository, commentRepository, likeRepository)
-  val postRoutes = new PostRoutes(pictureRepository, postRepository, postService, likeRepository)
+  val postService = new PostService(userRepository, pictureRepository, commentRepository, likeRepository, topicRepository)
+  val postRoutes = new PostRoutes(pictureRepository, postRepository, postService, likeRepository, topicRepository)
   val adminRoutes = new AdminRoutes(topicRepository)
   val appRoutes = new AppRoutes(authRoutes, pictureRoutes, topicRoutes, postRoutes, adminRoutes).routes
 

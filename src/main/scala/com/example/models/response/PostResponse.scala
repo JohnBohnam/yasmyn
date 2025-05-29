@@ -1,6 +1,6 @@
 package com.example.models.response
 
-import com.example.models.{Comment, Picture, User}
+import com.example.models.{Comment, Picture, Topic, User}
 
 // TODO: changge field classes to response classes
 case class PostResponse(
@@ -9,5 +9,6 @@ case class PostResponse(
                          picture: Picture,
                          createdAt: String,
                          likes: Int,
-                         comments: Seq[Comment]
+                         comments: Seq[Comment],
+                         topic: Topic,
                        ) extends Serializable

@@ -11,7 +11,7 @@ import com.example.config.AuthConfig.corsSettings
 import com.example.models.JsonFormats._
 import com.example.models.Post
 import com.example.models.response.PostResponse
-import com.example.repositories.{LikeRepository, PictureRepository, PostRepository}
+import com.example.repositories.{LikeRepository, PictureRepository, PostRepository, TopicRepository}
 import com.example.service.PostService
 import com.example.utils.AuthUtils
 
@@ -21,14 +21,17 @@ import scala.concurrent.{ExecutionContext, Future}
 import scala.util.{Failure, Success}
 
 
-
-class PostRoutes(pictureRepository: PictureRepository, postRepository: PostRepository, postService: PostService, likeRepository: LikeRepository)
+class PostRoutes(pictureRepository: PictureRepository,
+                 postRepository: PostRepository,
+                 postService: PostService,
+                 likeRepository: LikeRepository,
+                 topicRepository: TopicRepository)
                 (implicit system: ActorSystem, ec: ExecutionContext) {
 
   val authenticate = AuthUtils.authenticateToken
   implicit val materializer: Materializer = Materializer(system)
 
-  implicit val postFormat = jsonFormat5(Post)
+  implicit val postFormat = jsonFormat6(Post)
 
   val routes: Route = cors(corsSettings) {
     pathPrefix("posts") {
@@ -38,22 +41,32 @@ class PostRoutes(pictureRepository: PictureRepository, postRepository: PostRepos
             val filename = s"${UUID.randomUUID()}-${metadata.fileName}"
             val filePath = s"uploads/$filename"
 
-            println(s"Uploading file: $filename to path: $filePath")
 
             // 1. Save the uploaded file to disk
             onComplete(byteSource.runWith(akka.stream.scaladsl.FileIO.toPath(Paths.get(filePath)))) {
               case Success(_) =>
                 // 2. Create the Picture first
+                println(s"Saving picture with filename: $filename")
                 onComplete(pictureRepository.createPicture(userId, filename)) {
                   case Success(picture) =>
-                    // 3. Save the Post with reference to the picture
-                    onComplete(postRepository.createPost(userId, picture.id)) {
-                      case Success(savedPost) =>
-                        complete(StatusCodes.OK, savedPost)
-                      case Failure(postEx) =>
-                        complete(StatusCodes.InternalServerError, s"Failed to create post: ${postEx.getMessage}")
-                    }
+                    println(s"Picture saved with ID: ${picture.id}")
+                    println("Fetching active topic...")
+                    onComplete(topicRepository.getActiveTopic) {
+                      case Success(Some(topic)) =>
+                        // 3. Save the Post with reference to the picture and topic
+                        println(s"Active topic found with ID: ${topic.id}, creating post...")
+                        onComplete(postRepository.createPost(userId, picture.id, topic.id)) {
+                          case Success(savedPost) =>
+                            complete(StatusCodes.OK, savedPost)
+                          case Failure(postEx) =>
+                            complete(StatusCodes.InternalServerError, s"Failed to create post: ${postEx.getMessage}")
+                        }
+                      case Success(None) =>
+                        complete(StatusCodes.NotFound, "No active topic found")
 
+                      case Failure(topicEx) =>
+                        complete(StatusCodes.InternalServerError, s"Failed to fetch active topic: ${topicEx.getMessage}")
+                    }
                   case Failure(picEx) =>
                     complete(StatusCodes.InternalServerError, s"Failed to save picture: ${picEx.getMessage}")
                 }
@@ -109,10 +122,10 @@ class PostRoutes(pictureRepository: PictureRepository, postRepository: PostRepos
                 }
               }
           } ~
-        path(LongNumber / "comments") { postId =>
-          complete(StatusCodes.MethodNotAllowed, "Commenting on posts is not implemented yet")
-          // TODO
-        }
+          path(LongNumber / "comments") { postId =>
+            complete(StatusCodes.MethodNotAllowed, "Commenting on posts is not implemented yet")
+            // TODO
+          }
       }
     }
   }
