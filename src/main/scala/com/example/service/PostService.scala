@@ -25,6 +25,7 @@ class PostService(
     val commentsF = commentRepository.findByPostId(post.id)
     val likesF = likeRepository.countByPostId(post.id)
     val topicF = topicRepository.getTopicById(post.topicId)
+    val isLikedF = likeRepository.isPostLikedByUser(post.id, post.userId)
 
     for {
       userOpt <- userF
@@ -32,6 +33,7 @@ class PostService(
       comments <- commentsF
       likes <- likesF
       topicOpt <- topicF
+      isLiked <- isLikedF
     } yield {
       for {
         user <- userOpt
@@ -44,7 +46,8 @@ class PostService(
         createdAt = formatTimestamp(post.createdAt),
         likes = likes,
         comments = comments,
-        topic = topic
+        topic = topic,
+        isLiked = isLiked
       )
     }
   }

@@ -11,4 +11,5 @@ case class PostResponse(
                          likes: Int,
                          comments: Seq[Comment],
                          topic: Topic,
+                         isLiked: Boolean,
                        ) extends Serializable
