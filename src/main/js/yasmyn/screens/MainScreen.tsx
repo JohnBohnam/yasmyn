@@ -62,53 +62,74 @@ async function uploadImage(imageUri: string, setImageUri: (uri: string | null) =
     }
 }
 
+function formatTime(seconds: number): string {
+    const hours = Math.floor(seconds / 3600)
+    const minutes = Math.floor((seconds % 3600) / 60)
+    const secondsLeft = seconds % 60
+
+    const pad = (n: number) => n.toString().padStart(2, '0')
+    return `${pad(hours)}:${pad(minutes)}:${pad(secondsLeft)}`
+}
+
 
 // @ts-ignore
 export default function MainScreen({ navigation }) {
     const [topic, setTopic] = useState('');
-    const [imageUri, setImageUri] = useState<string | null>(null); // State to store the image URI
-    const [isUploadPhase, setPhase] = useState<boolean | null>(null);
+    const [imageUri, setImageUri] = useState<string | null>(null);
+    const [topicExpiration, setTopicExpiration] = useState<Date | null>(null);
     const [timeLeft, setTimeLeft] = useState<number>(0);
 
 
-    useEffect(() => {
-        const fetchTopic = async () => {
-            try {
-                const response = await fetch('http://localhost:8080/topic/today');
-                if (!response.ok) {
-                    throw new Error(`HTTP error! status: ${response.status}`);
-                }
-                const data = await response.json();
-                setTopic(data.topic); // Assuming the response has a `topic` field
-            } catch (err: any) {
-                Alert.alert('Error', err.message);
+    const fetchTopic = async () => {
+        try {
+            const response = await fetch('http://localhost:8080/topic/today');
+            if (!response.ok) {
+                throw new Error(`HTTP error! status: ${response.status}`);
             }
-        };
+            const data = await response.json();
+            setTopicExpiration(new Date(data.expiresAt));
+            setTopic(data.topic);
+        } catch (err: any) {
+            Alert.alert('Error', err.message);
+        }
+    };
 
+    useEffect(() => {
         fetchTopic();
-    }, []);
-
-    // to sie kreci jak pojebane
-    useEffect(() => {
-        const fetchPhaseAndTime = async () => {
-            try {
-                const response = await fetch('http://localhost:8080/phase');
-                if (!response.ok) {
-                    throw new Error(`HTTP error! status: ${response.status}`);
-                }
-                const data = await response.json();
-                setPhase(data.isUploading);
-                setTimeLeft(data.timeLeft);
-            } catch (err: any) {
-                Alert.alert('Error', err.message);
-            }
-        };
-        const time = Math.min(10000, timeLeft*1000);
-        const interval = setInterval(fetchPhaseAndTime, time);
-
-        // Cleanup interval when component unmounts
+        const interval = setInterval(fetchTopic, 2*1000);
         return () => clearInterval(interval);
     }, []);
+
+
+    useEffect(() => {
+        if (!topicExpiration) return;
+
+        const now = new Date();
+        const msUntilExpiration = topicExpiration.getTime() - now.getTime();
+
+        if (msUntilExpiration <= 0) return;
+
+        const timeout = setTimeout(() => {
+            // Re-fetch topic after it expires
+            fetchTopic();
+        }, msUntilExpiration + 1000); // slight buffer
+
+        return () => clearTimeout(timeout);
+    }, [topicExpiration]);
+    
+
+    useEffect(() => {
+    if (!topicExpiration) return;
+
+    const interval = setInterval(() => {
+        const now = new Date();
+        const diff = Math.max(0, Math.floor((topicExpiration.getTime() - now.getTime()) / 1000));
+        setTimeLeft(diff);
+    }, 1000);
+
+    return () => clearInterval(interval);
+    }, [topicExpiration]);
+
 
     // Request camera roll permissions (important for Expo)
     useEffect(() => {
@@ -136,15 +157,6 @@ export default function MainScreen({ navigation }) {
 };
 
 
-    function formatTime(seconds: number): string {
-        const hours = Math.floor(seconds / 3600)
-        const minutes = Math.floor((seconds % 3600) / 60)
-        const secondsLeft = seconds % 60
-
-        const pad = (n: number) => n.toString().padStart(2, '0')
-        return `${pad(hours)}:${pad(minutes)}:${pad(secondsLeft)}`
-    }
-
     return (
         <SafeAreaView style={styles.safe}>
             {/* HEADER */}
@@ -159,23 +171,28 @@ export default function MainScreen({ navigation }) {
 
             {/* SCROLLABLE BODY */}
             <ScrollView contentContainerStyle={styles.body}>
-                {isUploadPhase ? <Text style={styles.bigTitle}> PICTURE OF THE DAY:</Text> :
-                <Text style={styles.bigTitle}>NO UPLOADS, VOTE IN PHOTOS SECTION</Text>}
-                <Text style={styles.topic}>{topic || "Loading..."}</Text>
+            <Text style={styles.bigTitle}>PICTURE OF THE DAY:</Text>
+            <Text style={styles.topic}>{topic || "Loading..."}</Text>
+            {topicExpiration && (
+                <Text style={styles.expiration}>
+                Topic expires at: {topicExpiration.toLocaleTimeString()}
+                </Text>
+            )}
 
-                <TouchableOpacity onPress={handleSelectImage} style={styles.imagePicker} disabled={!isUploadPhase!}>
-                    {imageUri
-                        ? <Image source={{ uri: imageUri }} style={styles.mainImage} />
-                        : <View style={styles.cameraPlaceholder}><Text>Choose Image</Text></View>}
-                </TouchableOpacity>
+            <TouchableOpacity onPress={handleSelectImage} style={styles.imagePicker}>
+                {imageUri
+                ? <Image source={{ uri: imageUri }} style={styles.mainImage} />
+                : <View style={styles.cameraPlaceholder}><Text>Choose Image</Text></View>}
+            </TouchableOpacity>
 
-                <Text style={styles.timer}>TIME LEFT: {formatTime(timeLeft)}</Text>
+            <Text style={styles.timer}>TIME LEFT: {formatTime(timeLeft)}</Text>
             </ScrollView>
+
 
             {/* FOOTER */}
             <View style={styles.footer}>
                 <TouchableOpacity style={styles.circleButton}
-                                  onPress={() => navigation.navigate("Photos", { isVoting: !isUploadPhase })}>
+                                  onPress={() => navigation.navigate("Photos")}>
                     <Image source={require("../assets/photos.png")} style={styles.imageButton}/>
                 </TouchableOpacity>
                 <TouchableOpacity style={styles.circleButton} >
@@ -256,6 +273,12 @@ const styles = StyleSheet.create({
     imageButton: {
         width: CIRCLE,
         height: CIRCLE
-    }
-
+    },
+    expiration: {
+        fontSize: 14,
+        color: '#888',
+        marginTop: 4,
+        marginBottom: 10,
+        textAlign: 'center',
+    },
 });

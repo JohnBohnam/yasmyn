@@ -56,29 +56,23 @@ async function fetchEveryonesImages(setOthersPosts: React.Dispatch<React.SetStat
     }
 }
 
-const PhotosScreen = ({ route }: any) => {
+// @ts-ignore
+const PhotosScreen = ({ navigation }) => {
     const [othersPosts, setOthersPosts] = useState<Post[]>([]);
     const [loading, setLoading] = useState(true);
-    const { isVoting } = route.params;
 
     useEffect(() => {
         fetchEveryonesImages(setOthersPosts, setLoading);
     }, []);
 
-    console.log(isVoting)
-
-    // Render each photo
-    // const renderItem = ({ item }: { item: string }) => (
-    //     <View style={styles.imageContainer}>
-    //         <Image source={{ uri: imagePrefix + item }} style={styles.image} />
-    //     </View>
-    // );
 
     const authToken = AsyncStorage.getItem('authToken');
     // if (!authToken)
 
-    const renderItem = ({ item }: { item: Post }) => (
-        <PostTile post={item} />
+    const renderItem = ({ item, index }: { item: Post, index: number }) => (
+        <View key={index.toString()}>   
+            <PostTile post={item} />
+        </View>
     );
 
 
@@ -91,11 +85,7 @@ const PhotosScreen = ({ route }: any) => {
         return (
             <ScrollView style={styles.webScroller}>
                 {othersPosts.map((item, index) => (
-                    // <View key={index.toString()} style={styles.imageContainer}>
-                    //     <Image source={{ uri: imagePrefix + item }} style={styles.image} />
-                    // </View>
-                    console.log(item),
-                    renderItem({ item: item })
+                    renderItem({ item, index })
                 ))}
             </ScrollView>
         );
