@@ -1,5 +1,6 @@
 package com.example.models
 
+import com.example.database.tables.Observed
 import com.example.models.response.PostResponse
 import spray.json._
 
@@ -73,6 +74,8 @@ object JsonFormats extends DefaultJsonProtocol {
   implicit val commentFormat: RootJsonFormat[Comment] = jsonFormat5(Comment)
   implicit val topicFormat: RootJsonFormat[Topic] = jsonFormat3(Topic)
   implicit val postResponseFormat: RootJsonFormat[PostResponse] = jsonFormat8(PostResponse)
+
+  implicit val observedFormat: RootJsonFormat[Observed] = jsonFormat3(Observed)
 
 }
 

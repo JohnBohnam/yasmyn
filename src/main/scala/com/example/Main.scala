@@ -11,13 +11,47 @@ import com.example.routes._
 import com.example.service.PostService
 import slick.jdbc.SQLiteProfile.api._
 
-import java.time.LocalDate
 import scala.concurrent.ExecutionContextExecutor
+import scala.util.{Failure, Success}
 
 object Main extends App {
   implicit val system: ActorSystem = ActorSystem("scala-rest-api")
   implicit val materializer: Materializer = Materializer(system)
   implicit val ec: ExecutionContextExecutor = system.dispatcher
+
+  // do dropowania, czasem sie przydaje
+
+//  val dropAction = (
+////    UserTable.users.schema ++
+////    PictureTable.pictures.schema ++
+////    PostTable.posts.schema ++
+////    LikeTable.likes.schema
+////    CommentTable.comments.schema ++
+////    TopicTable.topics.schema ++
+////    ObservedTable.observed.schema
+//        ).dropIfExists
+//
+//  DatabaseConfig.db.run(dropAction)
+
+  val setup = (
+    (UserTable.users.schema ++
+      PictureTable.pictures.schema ++
+      PostTable.posts.schema ++
+      LikeTable.likes.schema ++
+      CommentTable.comments.schema ++
+      TopicTable.topics.schema ++
+      ObservedTable.observed.schema
+      ).createIfNotExists
+    )
+
+  val setupFuture = DatabaseConfig.db.run(setup)
+
+  setupFuture.onComplete {
+    case Success(_) =>
+      println("Tables created (or already existed)")
+    case Failure(ex) =>
+      println(s"Failed to create tables: $ex")
+  }
 
   // Initialize dependencies
   val userRepository = new UserRepository()
@@ -26,17 +60,8 @@ object Main extends App {
   val commentRepository = new CommentRepository()
   val likeRepository = new LikeRepository()
   val topicRepository = new TopicRepository()
+  val observedRepository = new ObservedRepository()
 
-  // Create tables
-  DatabaseConfig.db.run(
-    (UserTable.users.schema ++
-      PictureTable.pictures.schema ++
-      PostTable.posts.schema ++
-      LikeTable.likes.schema ++
-      CommentTable.comments.schema ++
-      TopicTable.topics.schema
-      ).createIfNotExists
-  )
 
   // Setup routes
   val authRoutes = new AuthRoutes(userRepository)
@@ -45,7 +70,8 @@ object Main extends App {
   val postService = new PostService(userRepository, pictureRepository, commentRepository, likeRepository, topicRepository)
   val postRoutes = new PostRoutes(pictureRepository, postRepository, postService, likeRepository, topicRepository)
   val adminRoutes = new AdminRoutes(topicRepository)
-  val appRoutes = new AppRoutes(authRoutes, pictureRoutes, topicRoutes, postRoutes, adminRoutes).routes
+  val observedRoutes = new MeRoutes(observedRepository, userRepository)
+  val appRoutes = new AppRoutes(authRoutes, pictureRoutes, topicRoutes, postRoutes, adminRoutes, observedRoutes).routes
 
 
   // Shutdown hook to close the database connection
