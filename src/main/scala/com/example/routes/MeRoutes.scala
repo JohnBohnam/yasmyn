@@ -8,6 +8,8 @@ import spray.json._
 import akka.http.scaladsl.marshallers.sprayjson.SprayJsonSupport._
 import akka.http.scaladsl.marshalling.ToEntityMarshaller
 import akka.http.scaladsl.server.{Directive1, Route}
+import ch.megard.akka.http.cors.scaladsl.CorsDirectives.cors
+import com.example.config.AuthConfig.corsSettings
 import com.example.models.User
 
 import scala.concurrent.{ExecutionContext, Future}
@@ -28,9 +30,18 @@ class MeRoutes(observedRepo: ObservedRepository, userRepository: UserRepository)
   val test: ToEntityMarshaller[Seq[User]] = implicitly
 
   val routes: Route =
+    cors(corsSettings) {
     pathPrefix("me") {
       authenticate { userId =>
         concat(
+          pathEndOrSingleSlash {
+              get {
+                onSuccess(userRepository.findById(userId)) {
+                  case Some(user) => complete(user)
+                  case None => complete(StatusCodes.NotFound, "User not found")
+                }
+              }
+          },
           path("observe") {
             post {
               entity(as[ObserveRequest]) { req =>
@@ -81,4 +92,5 @@ class MeRoutes(observedRepo: ObservedRepository, userRepository: UserRepository)
         )
       }
     }
+  }
 }

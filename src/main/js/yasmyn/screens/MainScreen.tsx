@@ -161,7 +161,10 @@ export default function MainScreen({ navigation }) {
         <SafeAreaView style={styles.safe}>
             {/* HEADER */}
             <View style={styles.header}>
-                <TouchableOpacity style={styles.circleButton}>
+                <TouchableOpacity 
+                    style={styles.circleButton}
+                    onPress={() => navigation.navigate("MyProfile")}
+                > 
                     <Text style={styles.circleText}>My{"\n"}Profile</Text>
                 </TouchableOpacity>
                 <TouchableOpacity style={styles.circleButton}>
