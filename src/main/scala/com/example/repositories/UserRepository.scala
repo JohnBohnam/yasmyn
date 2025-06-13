@@ -45,4 +45,13 @@ class UserRepository(implicit ec: ExecutionContext) {
       case None => None
     }
   }
+
+  def searchByUsername(query: String): Future[Seq[User]] = {
+    val pattern = "%" + query.toLowerCase + "%"
+    db.run(
+      UserTable.users
+        .filter(_.username.toLowerCase like pattern)
+        .result
+    )
+  }
 }

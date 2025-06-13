@@ -1,263 +1,335 @@
 import AsyncStorage from "@react-native-async-storage/async-storage";
-import React, { useEffect, useMemo, useState } from "react";
+import React, {useEffect, useMemo, useState} from "react";
 import {
-  View,
-  Text,
-  TextInput,
-  Button,
-  FlatList,
-  Image,
-  StyleSheet,
-  Alert,
+    View,
+    Text,
+    TextInput,
+    Button,
+    FlatList,
+    Image,
+    StyleSheet,
+    Alert,
 } from "react-native";
-import { User } from "../Model";
+import {User} from "../Model";
 
 const API_URL = "http://localhost:8080";
 
 const MyProfile: React.FC = () => {
-  const [observed, setObserved] = useState<User[]>([]);
-  const [observing, setObserving] = useState<User[]>([]);
-  const [newFriendId, setNewFriendId] = useState("");
-  const [myInfo, setMyInfo] = useState<User | null>(null);
+    const [observed, setObserved] = useState<User[]>([]);
+    const [observing, setObserving] = useState<User[]>([]);
+    const [newFriendId, setNewFriendId] = useState("");
+    const [myInfo, setMyInfo] = useState<User | null>(null);
+    const [searchResults, setSearchResults] = useState<User[]>([]);
 
 
-  useEffect(() => {
-    console.log("Updated observed:", observed);
-  }, [observed]);
+    useEffect(() => {
+        console.log("Updated observed:", observed);
+    }, [observed]);
 
-  useEffect(() => {
-    console.log("Updated observing:", observing);
-  }, [observing]);
+    useEffect(() => {
+        console.log("Updated observing:", observing);
+    }, [observing]);
 
-  const fetchMyInfo = async () => {
-    const authToken = await AsyncStorage.getItem("authToken");
-    if (!authToken) throw new Error("Authentication token is missing");
+    const fetchMyInfo = async () => {
+        const authToken = await AsyncStorage.getItem("authToken");
+        if (!authToken) throw new Error("Authentication token is missing");
 
-    try {
-      const response = await fetch(`${API_URL}/me`, {
-        method: "GET",
-        headers: { Authorization: `Bearer ${authToken}` },
-      });
+        try {
+            const response = await fetch(`${API_URL}/me`, {
+                method: "GET",
+                headers: {Authorization: `Bearer ${authToken}`},
+            });
 
-      if (!response.ok) throw new Error("Failed to fetch user info");
+            if (!response.ok) throw new Error("Failed to fetch user info");
 
-      const userInfo: User = await response.json();
-      setMyInfo(userInfo);
-    } catch (error) {
-      Alert.alert("Error", "Could not load user info");
+            const userInfo: User = await response.json();
+            setMyInfo(userInfo);
+        } catch (error) {
+            Alert.alert("Error", "Could not load user info");
+        }
+    };
+
+    const fetchObserved = async () => {
+        const authToken = await AsyncStorage.getItem("authToken");
+        if (!authToken) throw new Error("Authentication token is missing");
+
+        try {
+            const [obsRes, ingRes] = await Promise.all([
+                fetch(`${API_URL}/me/observed`, {
+                    headers: {Authorization: `Bearer ${authToken}`},
+                }),
+                fetch(`${API_URL}/me/observing`, {
+                    headers: {Authorization: `Bearer ${authToken}`},
+                }),
+            ]);
+
+            if (!obsRes.ok || !ingRes.ok) throw new Error("Fetch failed");
+
+            // console.log("jsons: ", obsRes.json(), ingRes.json());
+
+            const observedUsers: User[] = await obsRes.json();
+            const observingUsers: User[] = await ingRes.json();
+
+            console.log("Observed users:", observedUsers);
+            console.log("Observing users:", observingUsers);
+
+            setObserved(observedUsers);
+            setObserving(observingUsers);
+
+
+        } catch (error) {
+            Alert.alert("Error", "Could not load observe data");
+        }
+    };
+
+    const searchUsersByUsername = async () => {
+        const authToken = await AsyncStorage.getItem("authToken");
+        if (!authToken) {
+            Alert.alert("Error", "No auth token");
+            return;
+        }
+
+        if (!newFriendId.trim()) return;
+
+        try {
+            const response = await fetch(`${API_URL}/users/search?username=${encodeURIComponent(newFriendId)}`, {
+                headers: {
+                    Authorization: `Bearer ${authToken}`,
+                },
+            });
+
+            if (!response.ok) throw new Error("Search failed");
+
+            const users: User[] = await response.json();
+            setSearchResults(users);
+        } catch (err) {
+            Alert.alert("Error", "Failed to search users");
+            console.error(err);
+        }
+    };
+
+    const observeUserById = async (id: number) => {
+        try {
+            const authToken = await AsyncStorage.getItem("authToken");
+            if (!authToken) throw new Error("Authentication token is missing");
+
+            const response = await fetch(`${API_URL}/me/observe`, {
+                method: "POST",
+                headers: {
+                    "Content-Type": "application/json",
+                    Authorization: `Bearer ${authToken}`,
+                },
+                body: JSON.stringify({observedUserId: id}),
+            });
+
+            if (response.status === 409) {
+                Alert.alert("Already observing this user.");
+            } else if (!response.ok) {
+                throw new Error("Failed to observe user");
+            }
+
+            setSearchResults([]);
+            setNewFriendId("");
+            await fetchObserved();
+            await fetchMyInfo();
+        } catch (error) {
+            Alert.alert("Error", "Could not add observed user");
+        }
+    };
+
+
+    const addObserved = async () => {
+        try {
+            const authToken = await AsyncStorage.getItem("authToken");
+            if (!authToken) throw new Error("Authentication token is missing");
+
+            const response = await fetch(`${API_URL}/me/observe`, {
+                method: "POST",
+                headers: {
+                    "Content-Type": "application/json",
+                    Authorization: `Bearer ${authToken}`,
+                },
+                body: JSON.stringify({observedUserId: Number(newFriendId)}),
+            });
+
+            if (response.status === 409) {
+                Alert.alert("Already observing this user.");
+            } else if (!response.ok) {
+                throw new Error("Failed to observe user");
+            }
+
+            setNewFriendId("");
+            await fetchObserved();
+            await fetchMyInfo();
+        } catch (error) {
+            Alert.alert("Error", "Could not add observed user");
+        }
+    };
+
+    const removeObserved = async (id: number) => {
+        try {
+            const authToken = await AsyncStorage.getItem("authToken");
+            if (!authToken) throw new Error("Authentication token is missing");
+
+            await fetch(`${API_URL}/me/observe`, {
+                method: "DELETE",
+                headers: {
+                    "Content-Type": "application/json",
+                    Authorization: `Bearer ${authToken}`,
+                },
+                body: JSON.stringify({observedUserId: id}),
+            });
+
+            await fetchObserved();
+            await fetchMyInfo();
+        } catch {
+            Alert.alert("Error", "Could not remove observed user");
+        }
+    };
+
+    useEffect(() => {
+        fetchObserved();
+        fetchMyInfo();
+    }, []);
+
+
+    if (!myInfo) {
+        return (
+            <View style={styles.container}>
+                <Text>Loading profile...</Text>
+            </View>
+        );
     }
-  };
 
-  const fetchObserved = async () => {
-    const authToken = await AsyncStorage.getItem("authToken");
-    if (!authToken) throw new Error("Authentication token is missing");
+    console.log("Rendering component");
+    console.log("observed length:", observed.length);
+    console.log("observing length:", observing.length);
 
-    try {
-      const [obsRes, ingRes] = await Promise.all([
-        fetch(`${API_URL}/me/observed`, {
-          headers: { Authorization: `Bearer ${authToken}` },
-        }),
-        fetch(`${API_URL}/me/observing`, {
-          headers: { Authorization: `Bearer ${authToken}` },
-        }),
-      ]);
-
-      if (!obsRes.ok || !ingRes.ok) throw new Error("Fetch failed");
-
-      // console.log("jsons: ", obsRes.json(), ingRes.json());
-
-      const observedUsers: User[] = await obsRes.json();
-      const observingUsers: User[] = await ingRes.json();
-
-      console.log("Observed users:", observedUsers);
-      console.log("Observing users:", observingUsers);
-
-      setObserved(observedUsers);
-      setObserving(observingUsers);
-
-
-    } catch (error) {
-      Alert.alert("Error", "Could not load observe data");
-    }
-  };
-
-  const addObserved = async () => {
-    try {
-      const authToken = await AsyncStorage.getItem("authToken");
-      if (!authToken) throw new Error("Authentication token is missing");
-
-      const response = await fetch(`${API_URL}/me/observe`, {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-          Authorization: `Bearer ${authToken}`,
-        },
-        body: JSON.stringify({ observedUserId: Number(newFriendId) }),
-      });
-
-      if (response.status === 409) {
-        Alert.alert("Already observing this user.");
-      } else if (!response.ok) {
-        throw new Error("Failed to observe user");
-      }
-
-      setNewFriendId("");
-      await fetchObserved();
-      await fetchMyInfo();
-    } catch (error) {
-      Alert.alert("Error", "Could not add observed user");
-    }
-  };
-
-  const removeObserved = async (id: number) => {
-    try {
-      const authToken = await AsyncStorage.getItem("authToken");
-      if (!authToken) throw new Error("Authentication token is missing");
-
-      await fetch(`${API_URL}/me/observe`, {
-        method: "DELETE",
-        headers: {
-          "Content-Type": "application/json",
-          Authorization: `Bearer ${authToken}`,
-        },
-        body: JSON.stringify({ observedUserId: id }),
-      });
-
-      await fetchObserved();
-      await fetchMyInfo();
-    } catch {
-      Alert.alert("Error", "Could not remove observed user");
-    }
-  };
-
-  useEffect(() => {
-    fetchObserved();
-    fetchMyInfo();
-  }, []);
-
-
-
-  if (!myInfo) {
     return (
-      <View style={styles.container}>
-        <Text>Loading profile...</Text>
-      </View>
+        <View style={styles.container}>
+            {/* Profile Info */}
+            <View style={styles.profileContainer}>
+                <Image
+                    source={{uri: "https://via.placeholder.com/100"}}
+                    style={styles.profileImage}
+                />
+                <Text style={styles.profileName}>{myInfo.username}</Text>
+                <Text>
+                    You observe {observed.length} {observed.length === 1 ? "user" : "users"}.
+                </Text>
+                <Text>
+                    {observing.length} {observing.length === 1 ? "user observes you." : "users observe you."}
+                </Text>
+            </View>
+
+            {/* Observed List */}
+            <View style={styles.section}>
+                <Text style={styles.sectionTitle}>Observed</Text>
+                <FlatList
+                    data={observed}
+                    extraData={observed}
+                    keyExtractor={(item) => item.id.toString()}
+                    renderItem={({item}) => (
+                        <View style={styles.friendRow}>
+                            <Text>{item.username}</Text>
+                            <Button
+                                title="Remove"
+                                onPress={() => removeObserved(item.id)}
+                                color="red"
+                            />
+                        </View>
+                    )}
+                />
+            </View>
+
+            <View style={styles.section}>
+                <Text style={styles.sectionTitle}>Search Users by Username</Text>
+                <TextInput
+                    style={styles.input}
+                    value={newFriendId}
+                    onChangeText={setNewFriendId}
+                    placeholder="Enter username"
+                />
+                <Button title="Search" onPress={searchUsersByUsername}/>
+
+                {/* Display search results */}
+                {searchResults.length > 0 && (
+                    <FlatList
+                        data={searchResults}
+                        keyExtractor={(item) => item.id.toString()}
+                        renderItem={({item}) => (
+                            <View style={styles.friendRow}>
+                                <Text>{item.username}</Text>
+                                <Button
+                                    title="Observe"
+                                    onPress={() => observeUserById(item.id)}
+                                />
+                            </View>
+                        )}
+                    />
+                )}
+            </View>
+
+
+            {/* Observing List */}
+            <View style={styles.section}>
+                <Text style={styles.sectionTitle}>Users Observing You</Text>
+                <FlatList
+                    data={observing}
+                    extraData={observing}
+                    keyExtractor={(item) => item.id.toString()}
+                    renderItem={({item}) => (
+                        <View style={styles.friendRow}>
+                            <Text>{item.username}</Text>
+                        </View>
+                    )}
+                />
+            </View>
+        </View>
     );
-  }
-
-  console.log("Rendering component");
-  console.log("observed length:", observed.length);
-  console.log("observing length:", observing.length);
-
-  return (
-    <View style={styles.container}>
-      {/* Profile Info */}
-      <View style={styles.profileContainer}>
-        <Image
-          source={{ uri: "https://via.placeholder.com/100" }}
-          style={styles.profileImage}
-        />
-        <Text style={styles.profileName}>{myInfo.username}</Text>
-          <Text>
-          You observe {observed.length} {observed.length === 1 ? "user" : "users"}.
-        </Text>
-        <Text>
-          {observing.length} {observing.length === 1 ? "user observes you." : "users observe you."}
-        </Text>
-      </View>
-
-      {/* Observed List */}
-      <View style={styles.section}>
-        <Text style={styles.sectionTitle}>Observed</Text>
-        <FlatList
-          data={observed}
-          extraData={observed}
-          keyExtractor={(item) => item.id.toString()}
-          renderItem={({ item }) => (
-            <View style={styles.friendRow}>
-              <Text>{item.username}</Text>
-              <Button
-                title="Remove"
-                onPress={() => removeObserved(item.id)}
-                color="red"
-              />
-            </View>
-          )}
-        />
-      </View>
-
-      {/* Add Observed */}
-      <View style={styles.section}>
-        <Text style={styles.sectionTitle}>Add a User by ID</Text>
-        <TextInput
-          style={styles.input}
-          value={newFriendId}
-          onChangeText={setNewFriendId}
-          placeholder="Enter user ID"
-          keyboardType="numeric"
-        />
-        <Button title="Add Observed User" onPress={addObserved} />
-      </View>
-
-      {/* Observing List */}
-      <View style={styles.section}>
-        <Text style={styles.sectionTitle}>Users Observing You</Text>
-        <FlatList
-          data={observing}
-          extraData={observing}
-          keyExtractor={(item) => item.id.toString()}
-          renderItem={({ item }) => (
-            <View style={styles.friendRow}>
-              <Text>{item.username}</Text>
-            </View>
-          )}
-        />
-      </View>
-    </View>
-  );
 };
 
 export default MyProfile;
 
 const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-    padding: 20,
-  },
-  profileContainer: {
-    alignItems: "center",
-    marginBottom: 24,
-  },
-  profileImage: {
-    width: 100,
-    height: 100,
-    borderRadius: 50,
-    marginBottom: 8,
-  },
-  profileName: {
-    fontSize: 20,
-    fontWeight: "bold",
-    marginBottom: 4,
-  },
-  section: {
-    marginBottom: 24,
-  },
-  sectionTitle: {
-    fontSize: 18,
-    fontWeight: "600",
-    marginBottom: 8,
-  },
-  input: {
-    borderWidth: 1,
-    borderColor: "#ccc",
-    borderRadius: 6,
-    padding: 8,
-    marginBottom: 10,
-  },
-  friendRow: {
-    flexDirection: "row",
-    justifyContent: "space-between",
-    alignItems: "center",
-    paddingVertical: 6,
-  },
+    container: {
+        flex: 1,
+        padding: 20,
+    },
+    profileContainer: {
+        alignItems: "center",
+        marginBottom: 24,
+    },
+    profileImage: {
+        width: 100,
+        height: 100,
+        borderRadius: 50,
+        marginBottom: 8,
+    },
+    profileName: {
+        fontSize: 20,
+        fontWeight: "bold",
+        marginBottom: 4,
+    },
+    section: {
+        marginBottom: 24,
+    },
+    sectionTitle: {
+        fontSize: 18,
+        fontWeight: "600",
+        marginBottom: 8,
+    },
+    input: {
+        borderWidth: 1,
+        borderColor: "#ccc",
+        borderRadius: 6,
+        padding: 8,
+        marginBottom: 10,
+    },
+    friendRow: {
+        flexDirection: "row",
+        justifyContent: "space-between",
+        alignItems: "center",
+        paddingVertical: 6,
+    },
 });

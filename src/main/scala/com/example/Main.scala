@@ -71,7 +71,8 @@ object Main extends App {
   val postRoutes = new PostRoutes(pictureRepository, postRepository, postService, likeRepository, topicRepository)
   val adminRoutes = new AdminRoutes(topicRepository)
   val observedRoutes = new MeRoutes(observedRepository, userRepository)
-  val appRoutes = new AppRoutes(authRoutes, pictureRoutes, topicRoutes, postRoutes, adminRoutes, observedRoutes).routes
+  val userRoutes = new UserRoutes(userRepository)
+  val appRoutes = new AppRoutes(authRoutes, pictureRoutes, topicRoutes, postRoutes, adminRoutes, observedRoutes, userRoutes).routes
 
 
   // Shutdown hook to close the database connection

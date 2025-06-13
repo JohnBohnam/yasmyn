@@ -10,7 +10,8 @@ class AppRoutes(authRoutes: AuthRoutes,
                 topicRoutes: TopicRoutes,
                 postRoutes: PostRoutes,
                 adminRoutes: AdminRoutes,
-                observedRoutes: MeRoutes)
+                observedRoutes: MeRoutes,
+                userRoutes: UserRoutes)
                (implicit ec: ExecutionContext) {
   val routes: Route =
     authRoutes.routes ~
@@ -18,5 +19,6 @@ class AppRoutes(authRoutes: AuthRoutes,
       topicRoutes.routes ~
       postRoutes.routes ~
       adminRoutes.adminRoutes ~
-      observedRoutes.routes
+      observedRoutes.routes ~
+      userRoutes.routes
 }
