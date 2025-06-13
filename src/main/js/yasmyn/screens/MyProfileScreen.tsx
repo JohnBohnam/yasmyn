@@ -20,6 +20,42 @@ const MyProfile: React.FC = () => {
     const [newFriendId, setNewFriendId] = useState("");
     const [myInfo, setMyInfo] = useState<User | null>(null);
     const [searchResults, setSearchResults] = useState<User[]>([]);
+    const [searchQuery, setSearchQuery] = useState("");
+    const [isSearching, setIsSearching] = useState(false);
+
+    useEffect(() => {
+        const delayDebounce = setTimeout(() => {
+            if (searchQuery.trim() === "") {
+                setSearchResults([]);
+                return;
+            }
+
+            const fetchSearchResults = async () => {
+                const authToken = await AsyncStorage.getItem("authToken");
+                if (!authToken) return;
+
+                try {
+                    setIsSearching(true);
+                    const res = await fetch(`${API_URL}/users/search?username=${encodeURIComponent(searchQuery)}`, {
+                        headers: {Authorization: `Bearer ${authToken}`},
+                    });
+
+                    if (!res.ok) throw new Error("Search failed");
+                    const users: User[] = await res.json();
+                    setSearchResults(users);
+                } catch (error) {
+                    console.error("Search error:", error);
+                    setSearchResults([]);
+                } finally {
+                    setIsSearching(false);
+                }
+            };
+
+            fetchSearchResults();
+        }, 200);
+
+        return () => clearTimeout(delayDebounce);
+    }, [searchQuery]);
 
 
     useEffect(() => {
@@ -138,34 +174,6 @@ const MyProfile: React.FC = () => {
     };
 
 
-    const addObserved = async () => {
-        try {
-            const authToken = await AsyncStorage.getItem("authToken");
-            if (!authToken) throw new Error("Authentication token is missing");
-
-            const response = await fetch(`${API_URL}/me/observe`, {
-                method: "POST",
-                headers: {
-                    "Content-Type": "application/json",
-                    Authorization: `Bearer ${authToken}`,
-                },
-                body: JSON.stringify({observedUserId: Number(newFriendId)}),
-            });
-
-            if (response.status === 409) {
-                Alert.alert("Already observing this user.");
-            } else if (!response.ok) {
-                throw new Error("Failed to observe user");
-            }
-
-            setNewFriendId("");
-            await fetchObserved();
-            await fetchMyInfo();
-        } catch (error) {
-            Alert.alert("Error", "Could not add observed user");
-        }
-    };
-
     const removeObserved = async (id: number) => {
         try {
             const authToken = await AsyncStorage.getItem("authToken");
@@ -246,13 +254,11 @@ const MyProfile: React.FC = () => {
                 <Text style={styles.sectionTitle}>Search Users by Username</Text>
                 <TextInput
                     style={styles.input}
-                    value={newFriendId}
-                    onChangeText={setNewFriendId}
-                    placeholder="Enter username"
+                    value={searchQuery}
+                    onChangeText={setSearchQuery}
+                    placeholder="Start typing username..."
                 />
-                <Button title="Search" onPress={searchUsersByUsername}/>
-
-                {/* Display search results */}
+                {isSearching && <Text>Searching...</Text>}
                 {searchResults.length > 0 && (
                     <FlatList
                         data={searchResults}
@@ -260,10 +266,7 @@ const MyProfile: React.FC = () => {
                         renderItem={({item}) => (
                             <View style={styles.friendRow}>
                                 <Text>{item.username}</Text>
-                                <Button
-                                    title="Observe"
-                                    onPress={() => observeUserById(item.id)}
-                                />
+                                <Button title="Observe" onPress={() => observeUserById(item.id)}/>
                             </View>
                         )}
                     />
