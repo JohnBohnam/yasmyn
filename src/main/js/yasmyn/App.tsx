@@ -8,6 +8,7 @@ import LoginScreen from './screens/LoginScreen';
 import MainScreen from './screens/MainScreen';
 import PhotosScreen from "./screens/PhotosScreen";
 import MyProfileScreen from './screens/MyProfileScreen';
+import LeaderboardScreen from "./screens/LeaderboardScreen";
 
 const Stack = createStackNavigator();
 
@@ -20,6 +21,7 @@ export default function App() {
           <Stack.Screen name="Photos" component={PhotosScreen} />
           <Stack.Screen name="Main" component={MainScreen} options={{ headerLeft: () => null }} />
           <Stack.Screen name="MyProfile" component={MyProfileScreen} />
+          <Stack.Screen name="Leaderboard" component={LeaderboardScreen}/>
         </Stack.Navigator>
       </NavigationContainer>
   );

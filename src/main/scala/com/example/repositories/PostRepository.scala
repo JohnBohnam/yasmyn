@@ -1,7 +1,7 @@
 package com.example.repositories
 
 import com.example.config.DatabaseConfig.db
-import com.example.database.tables.PostTable
+import com.example.database.tables.{LikeTable, PostTable}
 import com.example.models.Post
 import slick.jdbc.SQLiteProfile.api._
 
@@ -32,23 +32,49 @@ class PostRepository(implicit ec: ExecutionContext) {
     db.run(query.result)
   }
 
-  def getAllPosts(limit: Int, afterId: Option[Long], archived: Boolean): Future[Seq[Post]] = {
-    val baseQuery = PostTable.posts //.filter(_.archived === archived)
-
-    val filteredQuery = afterId match {
+  def getAllPosts(limit: Int, sortByLikes: Boolean, afterId: Option[Long], topicId: Option[Long]): Future[Seq[Post]] = {
+    val baseQuery = PostTable.posts
+    val filteredQuery = topicId match {
       case Some(id) =>
-        baseQuery //.filter(_.id > id).sortBy(_.id.desc).take(limit)
+        baseQuery.filter(_.topicId === id).sortBy(_.id.desc)
       case None =>
-        baseQuery //.sortBy(_.id.desc).take(limit)
+        baseQuery.sortBy(_.id.desc)
     }
+    if (sortByLikes) {
+      val postsByLikeCount = filteredQuery
+        .joinLeft(LikeTable.likes).on(_.id === _.postId)
+        .groupBy { case (post, _) => post }
+        .map { case (post, group) =>
+          (
+            post,
+            group
+              .filter { case (_, likeOpt) => likeOpt.isDefined }
+              .length
+          )
+        }
+        .sortBy { case (_, likeCount) => likeCount.desc }
 
-    db.run(filteredQuery.result)
+      val action = postsByLikeCount.result
 
-    db.run(filteredQuery.result).map { posts =>
-      println(s"Fetched ${posts.length} posts")
-      posts
+      db.run(action).map { results =>
+        results.foreach { case (post, likeCount) =>
+          println(s"Post ID: ${post.id}, Likes: $likeCount")
+        }
+        results.map(_._1)
+      }
+    } else {
+
+      val finalQuery = afterId match {
+        case Some(id) =>
+          filteredQuery.filter(_.id > id).take(limit)
+        case None =>
+          filteredQuery.take(limit)
+      }
+
+      db.run(finalQuery.result).map { posts =>
+        println(s"Fetched ${posts.length} posts")
+        posts
+      }
     }
   }
-
-
 }

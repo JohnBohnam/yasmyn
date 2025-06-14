@@ -11,7 +11,7 @@ import com.example.models.JsonFormats._
 import com.example.repositories.TopicRepository
 import spray.json.RootJsonFormat
 
-import java.time.{LocalDate, LocalTime}
+import java.time.{LocalDate, LocalDateTime, LocalTime}
 import scala.concurrent.ExecutionContext
 import scala.util.{Failure, Success, Try}
 
@@ -27,13 +27,9 @@ class AdminRoutes(topicRepository: TopicRepository)(implicit system: ActorSystem
         concat(
           (post & path("today")) {
             entity(as[TopicSetRequest]) { req =>
-              val now = LocalTime.now()
-              val baseDate = LocalDate.now()
-              val effectiveDate =
-                if (now.isBefore(Globals.topicChangeTime)) baseDate.minusDays(1)
-                else baseDate
+              val now = LocalDateTime.now()
 
-              onSuccess(topicRepository.replaceTopic(req.content, effectiveDate)) { _ =>
+              onSuccess(topicRepository.replaceTopic(req.content, now)) { _ =>
                 complete(StatusCodes.OK)
               }
             }
@@ -41,7 +37,7 @@ class AdminRoutes(topicRepository: TopicRepository)(implicit system: ActorSystem
 
           (post & path(Segment)) { dateStr =>
             entity(as[TopicSetRequest]) { req =>
-              Try(LocalDate.parse(dateStr)) match {
+              Try(LocalDateTime.parse(dateStr)) match {
                 case Success(date) =>
                   onSuccess(topicRepository.replaceTopic(req.content, date)) { _ =>
                     complete(StatusCodes.OK)

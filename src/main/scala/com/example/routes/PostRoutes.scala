@@ -76,8 +76,8 @@ class PostRoutes(pictureRepository: PictureRepository,
             }
           }
         } ~
-          (get & parameters("limit".as[Int].withDefault(20), "afterId".as[Long].?)) { (limit, afterId) =>
-            onComplete(postRepository.getAllPosts(limit, afterId, archived = false)) {
+          (get & parameters("limit".as[Int].withDefault(20), "sortByLikes".as[Boolean].withDefault(false), "afterId".as[Long].?, "topicId".as[Long].?)) { (limit, sortByLikes, afterId, topicId) =>
+            onComplete(postRepository.getAllPosts(limit, sortByLikes,  afterId, topicId)) {
               case Success(posts) =>
                 // Convert each Post to Future[Option[PostResponse]]
                 val enrichedPostsFut: Future[Seq[PostResponse]] =

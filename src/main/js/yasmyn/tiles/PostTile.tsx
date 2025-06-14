@@ -1,9 +1,10 @@
 import AsyncStorage from "@react-native-async-storage/async-storage";
-import { Post } from "../Model";
-import React, { useState } from "react";
-import { View, Image, Text, StyleSheet, Button } from "react-native";
+import {Post, User} from "../Model";
+import React, {useEffect, useState} from "react";
+import {View, Image, Text, StyleSheet, Button, Alert} from "react-native";
 
 let imagePrefix = 'http://localhost:8080/uploads/';
+const API_URL = "http://localhost:8080";
 
 const sendLike = async (postId: number, liked: boolean): Promise<boolean> => {
     try {
@@ -12,7 +13,7 @@ const sendLike = async (postId: number, liked: boolean): Promise<boolean> => {
 
         const method = liked ? 'DELETE' : 'POST';
         const url = `http://localhost:8080/posts/${postId}/likes`;
-
+        console.log(`Sending ${method} request to ${url}`);
         const response = await fetch(url, {
             method,
             headers: {
@@ -33,9 +34,68 @@ const sendLike = async (postId: number, liked: boolean): Promise<boolean> => {
     }
 };
 
-const PostTile: React.FC<{ post: Post }> = ({ post }) => {
+
+const observeUserById = async (id: number, setObserveDisabled: React.Dispatch<React.SetStateAction<boolean>>) => {
+    try {
+        const authToken = await AsyncStorage.getItem("authToken");
+        if (!authToken) throw new Error("Authentication token is missing");
+
+        const response = await fetch(`${API_URL}/me/observe`, {
+            method: "POST",
+            headers: {
+                "Content-Type": "application/json",
+                Authorization: `Bearer ${authToken}`,
+            },
+            body: JSON.stringify({observedUserId: id}),
+        });
+
+        if (response.status === 409) {
+            Alert.alert("Already observing this user.");
+        } else if (!response.ok) {
+            throw new Error("Failed to observe user");
+        }
+        setObserveDisabled(true);
+    } catch (error) {
+        Alert.alert("Error", "Could not add observed user");
+    }
+};
+
+const fetchObserved = async (id: number, setObserveDisabled: (disabled: boolean) => void) => {
+    const authToken = await AsyncStorage.getItem("authToken");
+    if (!authToken) throw new Error("Authentication token is missing");
+
+    try {
+        const [obsRes] = await Promise.all([
+            fetch(`${API_URL}/me/observed`, {
+                headers: {Authorization: `Bearer ${authToken}`},
+            }),
+        ]);
+
+        if (!obsRes.ok) throw new Error("Fetch failed");
+
+
+        const observedUsers: User[] = await obsRes.json();
+
+        if (observedUsers.some((user) => user.id === id)) {
+            setObserveDisabled(true);
+        } else {
+            setObserveDisabled(false);
+        }
+
+    } catch (error) {
+        Alert.alert("Error", "Could not load observe data");
+    }
+};
+
+const PostTile: React.FC<{ post: Post; disableLike?: boolean, place?: number }> = ({ post, disableLike = false, place = -1 }) => {
     const [liked, setLiked] = useState(post.isLiked); // assume this is a boolean field now
     const [likesCount, setLikesCount] = useState(post.likes);
+    const [observeDisabled, setObserveDisabled] = useState(false);
+
+
+    useEffect(() => {
+        fetchObserved(post.user.id, setObserveDisabled);
+    }, []);
 
     const toggleLike = async () => {
         const success = await sendLike(post.id, liked);
@@ -60,11 +120,17 @@ const PostTile: React.FC<{ post: Post }> = ({ post }) => {
                 resizeMode="cover"
             />
             <View style={styles.footer}>
-                <Button
+            {place == 1 ? <Text style={{ fontSize: 14, fontWeight: 'bold', marginVertical: 10 }}>CURRENT WINNER, LIKES: {likesCount}</Text> :
+                place != -1 && <Text style={{ fontSize: 14, fontWeight: 'bold', marginVertical: 10 }}>CURRENT PLACE: {place}, LIKES: {likesCount}</Text>}
+
+                 {!disableLike ? <Button
                     title={`${liked ? '💔' : '❤️'} ${likesCount}`}
                     onPress={toggleLike}
-                />
-                <Button title={`💬 ${post.comments.length}`} onPress={() => {}} />
+                /> : place == -1 && <View style={styles.footer}>
+                     LIKES: {likesCount}
+                 </View>}
+                <Button disabled={observeDisabled}
+                    title={`🙋‍♂️ `} onPress={() => observeUserById(post.user.id, setObserveDisabled)} />
             </View>
         </View>
     );

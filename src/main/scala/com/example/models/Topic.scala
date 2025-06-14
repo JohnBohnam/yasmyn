@@ -1,9 +1,10 @@
 package com.example.models
 
-import java.time.LocalDate
+import java.time.{LocalDate, LocalDateTime}
 
 case class Topic(
   id: Long,
   content: String,
-  activeDate: LocalDate,
+  from: LocalDateTime,
+  to: LocalDateTime,
 ) extends Serializable

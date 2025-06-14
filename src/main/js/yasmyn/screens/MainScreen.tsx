@@ -79,7 +79,6 @@ export default function MainScreen({ navigation }) {
     const [topicExpiration, setTopicExpiration] = useState<Date | null>(null);
     const [timeLeft, setTimeLeft] = useState<number>(0);
 
-
     const fetchTopic = async () => {
         try {
             const response = await fetch('http://localhost:8080/topic/today');
@@ -167,9 +166,6 @@ export default function MainScreen({ navigation }) {
                 > 
                     <Text style={styles.circleText}>My{"\n"}Profile</Text>
                 </TouchableOpacity>
-                <TouchableOpacity style={styles.circleButton}>
-                    <Text style={styles.circleText}>Options</Text>
-                </TouchableOpacity>
             </View>
 
             {/* SCROLLABLE BODY */}
@@ -198,11 +194,9 @@ export default function MainScreen({ navigation }) {
                                   onPress={() => navigation.navigate("Photos")}>
                     <Image source={require("../assets/photos.png")} style={styles.imageButton}/>
                 </TouchableOpacity>
-                <TouchableOpacity style={styles.circleButton} >
+                <TouchableOpacity style={styles.circleButton}
+                                  onPress={() => navigation.navigate("Leaderboard")}>
                     <Image source={require("../assets/friends.png")} style={styles.imageButton}/>
-                </TouchableOpacity>
-                <TouchableOpacity style={styles.circleButton}>
-                    <Image source={require("../assets/search.png")} style={styles.imageButton}/>
                 </TouchableOpacity>
             </View>
         </SafeAreaView>

@@ -9,8 +9,10 @@ import com.example.database.tables._
 import com.example.repositories._
 import com.example.routes._
 import com.example.service.PostService
+import com.example.time.TopicGenerator
 import slick.jdbc.SQLiteProfile.api._
 
+import java.time.{LocalDate, LocalDateTime}
 import scala.concurrent.ExecutionContextExecutor
 import scala.util.{Failure, Success}
 
@@ -21,17 +23,18 @@ object Main extends App {
 
   // do dropowania, czasem sie przydaje
 
-//  val dropAction = (
-////    UserTable.users.schema ++
-////    PictureTable.pictures.schema ++
-////    PostTable.posts.schema ++
-////    LikeTable.likes.schema
-////    CommentTable.comments.schema ++
-////    TopicTable.topics.schema ++
-////    ObservedTable.observed.schema
-//        ).dropIfExists
-//
-//  DatabaseConfig.db.run(dropAction)
+  val dropAction = (
+    UserTable.users.schema ++
+    PictureTable.pictures.schema ++
+   PostTable.posts.schema ++
+   LikeTable.likes.schema ++
+   CommentTable.comments.schema ++
+  TopicTable.topics.schema ++
+  ObservedTable.observed.schema
+      ).dropIfExists
+
+  DatabaseConfig.db.run(dropAction)
+
 
   val setup = (
     (UserTable.users.schema ++
@@ -81,6 +84,9 @@ object Main extends App {
     db.close()
     system.terminate()
   }
+
+  TopicGenerator.start(topicRepository)
+
   // Start server
   Http().newServerAt("localhost", 8080).bind(appRoutes)
   println("Server running at http://localhost:8080/")

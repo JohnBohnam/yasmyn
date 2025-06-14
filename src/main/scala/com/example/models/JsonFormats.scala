@@ -72,7 +72,7 @@ object JsonFormats extends DefaultJsonProtocol {
   }
 
   implicit val commentFormat: RootJsonFormat[Comment] = jsonFormat5(Comment)
-  implicit val topicFormat: RootJsonFormat[Topic] = jsonFormat3(Topic)
+  implicit val topicFormat: RootJsonFormat[Topic] = jsonFormat4(Topic)
   implicit val postResponseFormat: RootJsonFormat[PostResponse] = jsonFormat8(PostResponse)
 
   implicit val observedFormat: RootJsonFormat[Observed] = jsonFormat3(Observed)

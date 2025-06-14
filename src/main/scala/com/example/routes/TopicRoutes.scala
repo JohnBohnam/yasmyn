@@ -13,13 +13,13 @@ import com.example.repositories.TopicRepository
 import spray.json.RootJsonFormat
 
 import java.sql.Timestamp
-import java.time.LocalDate
+import java.time.{LocalDate, LocalDateTime}
 import scala.concurrent.ExecutionContext
 import scala.util.Success
 
 class TopicRoutes(topicRepository: TopicRepository)(implicit system: ActorSystem, ec: ExecutionContext) {
 
-  case class TopicResponse(date: String, topic: String, topicId: String, expiresAt: Timestamp)
+  case class TopicResponse(date: String, topic: String, topicId: String, expiresAt: LocalDateTime)
 
   implicit val materializer: Materializer = Materializer(system)
 
@@ -37,7 +37,7 @@ class TopicRoutes(topicRepository: TopicRepository)(implicit system: ActorSystem
                   date = today.toString,
                   topic = topic.content,
                   topicId = topic.id.toString,
-                  expiresAt = Globals.getNextTopicChangeTime
+                  expiresAt = topic.to
                 )
               )
             case _ =>
@@ -47,7 +47,7 @@ class TopicRoutes(topicRepository: TopicRepository)(implicit system: ActorSystem
                   date = today.toString,
                   topic = "No topic available for today",
                   topicId = "N/A",
-                  expiresAt = Globals.getNextTopicChangeTime
+                  expiresAt = LocalDateTime.now().plusDays(9999)
                 )
               )
           }

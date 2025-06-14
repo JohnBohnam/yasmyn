@@ -19,21 +19,22 @@ import { Post } from '../Model';
 const { height: SCREEN_HEIGHT } = Dimensions.get('window');
 
 function parsePostDates(post: any) {
-  return {
-    ...post,
-    createdAt: new Date(post.createdAt),
-  };
+    return {
+        ...post,
+        createdAt: new Date(post.createdAt),
+    };
 }
 
-async function fetchEveryonesImages(setOthersPosts: React.Dispatch<React.SetStateAction<Post[]>>, setLoading: React.Dispatch<React.SetStateAction<boolean>>) {
+async function fetchEveryonesImages(setOthersPosts: React.Dispatch<React.SetStateAction<Post[]>>, setLoading: React.Dispatch<React.SetStateAction<boolean>>, setTopic: React.Dispatch<React.SetStateAction<string | null>>) {
     try {
         const authToken = await AsyncStorage.getItem('authToken');
 
         if (!authToken) {
             throw new Error('Authentication token is missing');
         }
-        //const topicId = await fetchTodayTopic(); mozna dac topic id do linku jakbysmy chcieli zdjecia z tylko dzisiaj
-        const response = await fetch(`http://localhost:8080/posts`, {
+        const {topic, topicId} = await fetchTodayTopic();
+        setTopic(topic);
+        const response = await fetch(`http://localhost:8080/posts?sortByLikes=true&topicId=${topicId}`, {
             method: 'GET',
             headers: {
                 'Authorization': `Bearer ${authToken}`,
@@ -57,37 +58,36 @@ async function fetchEveryonesImages(setOthersPosts: React.Dispatch<React.SetStat
 }
 
 
-async function fetchTodayTopicId(): Promise<number> {
+async function fetchTodayTopic(): Promise<{ topic: string, topicId: string }> {
     try {
         const response = await fetch('http://localhost:8080/topic/today');
         if (!response.ok) {
             throw new Error(`HTTP error! status: ${response.status}`);
         }
         const data = await response.json();
-        return data.topicId;
+        return {topic: data.topic, topicId: data.topicId};
     } catch (err: any) {
         Alert.alert('Error', err.message);
     }
-    return -1;
+    return {topic: '', topicId: '0'};
 };
 
 // @ts-ignore
-const PhotosScreen = ({ navigation }) => {
+const LeaderboardScreen = ({ navigation }) => {
     const [othersPosts, setOthersPosts] = useState<Post[]>([]);
     const [loading, setLoading] = useState(true);
-    const [topicId, setTopicId] = useState<number>(-1);
+    const [topic, setTopic] = useState<string | null>('');
 
     useEffect(() => {
-        fetchEveryonesImages(setOthersPosts, setLoading);
-        fetchTodayTopicId().then(setTopicId);
+        fetchEveryonesImages(setOthersPosts, setLoading, setTopic);
     }, []);
 
     const authToken = AsyncStorage.getItem('authToken');
     // if (!authToken)
 
     const renderItem = ({ item, index }: { item: Post, index: number }) => (
-        <View key={index.toString()}>   
-            <PostTile post={item} disableLike={item.topic.id != topicId} />
+        <View key={index.toString()}>
+            <PostTile post={item} disableLike={true} place={index + 1}/>
         </View>
     );
 
@@ -99,6 +99,9 @@ const PhotosScreen = ({ navigation }) => {
     if (Platform.OS === 'web') {
         return (
             <ScrollView style={styles.webScroller}>
+                <Text style={{ fontSize: 24, fontWeight: 'bold', textAlign: 'center', marginVertical: 10 }}>
+                    LEADERBOARD FOR TOPIC: {topic}
+                </Text>
                 {othersPosts.map((item, index) => (
                     renderItem({ item, index })
                 ))}
@@ -108,7 +111,9 @@ const PhotosScreen = ({ navigation }) => {
 
     return (
         <View>
-            <Text>Hello</Text>
+            <Text style={{ fontSize: 24, fontWeight: 'bold', textAlign: 'center', marginVertical: 10 }}>
+                LEADERBOARD FOR TOPIC: {topic}
+            </Text>
             <FlatList
                 data={othersPosts}
                 keyExtractor={(item, index) => index.toString()}
@@ -122,9 +127,9 @@ const PhotosScreen = ({ navigation }) => {
                 getItemLayout={(data, index) => (
                     { length: SCREEN_HEIGHT, offset: SCREEN_HEIGHT * index, index }
                 )}
-            />  
+            />
         </View>
-        
+
     );
 };
 
@@ -152,4 +157,4 @@ const styles = StyleSheet.create({
     },
 });
 
-export default PhotosScreen;
+export default LeaderboardScreen;

@@ -31,5 +31,5 @@ export interface Post {
   likes: number;
   comments: Comment[];
   topic: Topic;
-  isLiked: boolean; 
+  isLiked: boolean;
 }
