@@ -10,6 +10,7 @@ import akka.http.scaladsl.marshallers.sprayjson.SprayJsonSupport._
 import akka.http.scaladsl.model.StatusCodes
 import akka.http.scaladsl.server.{Directive1, Route}
 import com.example.models.DTO.UserDTO
+import com.example.models.User
 import com.example.service.UserService
 import com.example.utils.AuthUtils
 
@@ -30,7 +31,8 @@ class UserRoutes(userRepo: UserRepository,
                   if (users.isEmpty) {
                     complete(StatusCodes.NotFound, "No users found")
                   } else {
-                    val userDTOsF: Future[Seq[UserDTO]] = Future.sequence(users.map(user => userService.toUserDTO(user)))
+                    // jest error, ale sie kompiluje lol
+                    val userDTOsF: Future[Seq[UserDTO]] = Future.sequence(users.map((user: User) => userService.toUserDTO(user) : Future[UserDTO]))
                     onSuccess(userDTOsF) { userDTOs =>
                       complete(userDTOs)
                     }
