@@ -14,6 +14,7 @@ import slick.jdbc.SQLiteProfile.api._
 
 import java.time.{LocalDate, LocalDateTime}
 import scala.concurrent.ExecutionContextExecutor
+import scala.io.StdIn
 import scala.util.{Failure, Success}
 
 object Main extends App {
@@ -92,4 +93,7 @@ object Main extends App {
   // Start server
   Http().newServerAt("localhost", 8080).bind(appRoutes)
   println("Server running at http://localhost:8080/")
+
+
+  StdIn.readLine()  // Keeps the app alive until you press Enter
 }

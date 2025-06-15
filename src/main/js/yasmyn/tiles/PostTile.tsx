@@ -2,9 +2,10 @@ import AsyncStorage from "@react-native-async-storage/async-storage";
 import {Post, User} from "../Model";
 import React, {useEffect, useState} from "react";
 import {View, Image, Text, StyleSheet, Button, Alert} from "react-native";
+import {API_BASE_URL} from "../constants";
 
-let imagePrefix = 'http://localhost:8080/uploads/';
-const API_URL = "http://localhost:8080";
+let imagePrefix = API_BASE_URL + '/uploads/';
+const API_URL = API_BASE_URL;
 
 const sendLike = async (postId: number, liked: boolean): Promise<boolean> => {
     try {
@@ -12,7 +13,7 @@ const sendLike = async (postId: number, liked: boolean): Promise<boolean> => {
         if (!authToken) throw new Error('Authentication token is missing');
 
         const method = liked ? 'DELETE' : 'POST';
-        const url = `http://localhost:8080/posts/${postId}/likes`;
+        const url = `${API_BASE_URL}/posts/${postId}/likes`;
         console.log(`Sending ${method} request to ${url}`);
         const response = await fetch(url, {
             method,

@@ -14,6 +14,7 @@ import {
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import PostTile from '../tiles/PostTile';
 import { Post } from '../Model';
+import {API_BASE_URL} from "../constants";
 
 
 const { height: SCREEN_HEIGHT } = Dimensions.get('window');
@@ -33,7 +34,7 @@ async function fetchEveryonesImages(setOthersPosts: React.Dispatch<React.SetStat
             throw new Error('Authentication token is missing');
         }
         //const topicId = await fetchTodayTopic(); mozna dac topic id do linku jakbysmy chcieli zdjecia z tylko dzisiaj
-        const response = await fetch(`http://localhost:8080/posts`, {
+        const response = await fetch(`${API_BASE_URL}/posts`, {
             method: 'GET',
             headers: {
                 'Authorization': `Bearer ${authToken}`,
@@ -59,7 +60,7 @@ async function fetchEveryonesImages(setOthersPosts: React.Dispatch<React.SetStat
 
 async function fetchTodayTopicId(): Promise<number> {
     try {
-        const response = await fetch('http://localhost:8080/topic/today');
+        const response = await fetch(`${API_BASE_URL}/topic/today`);
         if (!response.ok) {
             throw new Error(`HTTP error! status: ${response.status}`);
         }

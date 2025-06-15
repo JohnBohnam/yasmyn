@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
 import { View, Text, TextInput, Button, StyleSheet, Alert } from 'react-native';
+import {API_BASE_URL} from "../constants";
 
 // @ts-ignore
 export default function RegisterScreen({ navigation }) {
@@ -10,7 +11,7 @@ export default function RegisterScreen({ navigation }) {
     const handleRegister = async () => {
         // Replace with your API endpoint
         try {
-            let response = await fetch('http://localhost:8080/auth/register', {
+            let response = await fetch(`${API_BASE_URL}/auth/register`, {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({
