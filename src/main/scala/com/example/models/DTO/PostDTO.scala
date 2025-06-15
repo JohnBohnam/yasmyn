@@ -1,11 +1,11 @@
-package com.example.models.response
+package com.example.models.DTO
 
-import com.example.models.{Comment, Picture, Topic, User}
+import com.example.models.{Comment, Picture, Topic}
 
 // TODO: changge field classes to response classes
-case class PostResponse(
+case class PostDTO(
                          id: Long,
-                         user: User,
+                         user: UserDTO,
                          picture: Picture,
                          createdAt: String,
                          likes: Int,

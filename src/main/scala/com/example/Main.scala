@@ -8,7 +8,7 @@ import com.example.config.DatabaseConfig.db
 import com.example.database.tables._
 import com.example.repositories._
 import com.example.routes._
-import com.example.service.PostService
+import com.example.service.{PostService, UserService}
 import com.example.time.TopicGenerator
 import slick.jdbc.SQLiteProfile.api._
 
@@ -65,16 +65,18 @@ object Main extends App {
   val topicRepository = new TopicRepository()
   val observedRepository = new ObservedRepository()
 
+  val userService = new UserService(postRepository, pictureRepository)
+
 
   // Setup routes
   val authRoutes = new AuthRoutes(userRepository)
   val pictureRoutes = new PictureRoutes(pictureRepository)
   val topicRoutes = new TopicRoutes(topicRepository)
-  val postService = new PostService(userRepository, pictureRepository, commentRepository, likeRepository, topicRepository)
+  val postService = new PostService(userRepository, pictureRepository, commentRepository, likeRepository, topicRepository, userService)
   val postRoutes = new PostRoutes(pictureRepository, postRepository, postService, likeRepository, topicRepository)
   val adminRoutes = new AdminRoutes(topicRepository)
-  val observedRoutes = new MeRoutes(observedRepository, userRepository)
-  val userRoutes = new UserRoutes(userRepository)
+  val observedRoutes = new MeRoutes(observedRepository, userRepository, userService)
+  val userRoutes = new UserRoutes(userRepository, userService)
   val appRoutes = new AppRoutes(authRoutes, pictureRoutes, topicRoutes, postRoutes, adminRoutes, observedRoutes, userRoutes).routes
 
 

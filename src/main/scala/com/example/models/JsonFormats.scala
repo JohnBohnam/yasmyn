@@ -1,7 +1,7 @@
 package com.example.models
 
 import com.example.database.tables.Observed
-import com.example.models.response.PostResponse
+import com.example.models.DTO.{PostDTO, UserDTO}
 import spray.json._
 
 import java.sql.Timestamp
@@ -13,7 +13,7 @@ object JsonFormats extends DefaultJsonProtocol {
   // Core model formats
   implicit val userRegistrationFormat: RootJsonFormat[UserRegistrationRequest] = jsonFormat3(UserRegistrationRequest)
   implicit val loginFormat: RootJsonFormat[LoginRequest] = jsonFormat2(LoginRequest)
-  implicit val userFormat: RootJsonFormat[User] = jsonFormat4(User)
+  implicit val userFormat: RootJsonFormat[UserDTO] = jsonFormat4(UserDTO)
 
   // Timestamp format (java.sql.Timestamp)
   implicit object TimestampFormat extends RootJsonFormat[Timestamp] {
@@ -73,7 +73,7 @@ object JsonFormats extends DefaultJsonProtocol {
 
   implicit val commentFormat: RootJsonFormat[Comment] = jsonFormat5(Comment)
   implicit val topicFormat: RootJsonFormat[Topic] = jsonFormat4(Topic)
-  implicit val postResponseFormat: RootJsonFormat[PostResponse] = jsonFormat8(PostResponse)
+  implicit val postResponseFormat: RootJsonFormat[PostDTO] = jsonFormat8(PostDTO)
 
   implicit val observedFormat: RootJsonFormat[Observed] = jsonFormat3(Observed)
 

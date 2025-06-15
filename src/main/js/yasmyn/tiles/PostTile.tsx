@@ -92,6 +92,8 @@ const PostTile: React.FC<{ post: Post; disableLike?: boolean, place?: number }> 
     const [likesCount, setLikesCount] = useState(post.likes);
     const [observeDisabled, setObserveDisabled] = useState(false);
 
+    console.log("topic: ", post.topic.content, "liked: ", post.isLiked);
+
 
     useEffect(() => {
         fetchObserved(post.user.id, setObserveDisabled);
@@ -112,10 +114,16 @@ const PostTile: React.FC<{ post: Post; disableLike?: boolean, place?: number }> 
     return (
         <View style={styles.container}>
             <View style={styles.header}>
-                <View>
+                <View style={{ flexDirection: 'row', alignItems: 'center', gap: 10 }}>
+                    <Image
+                    source={{ uri: imagePrefix + post.user.imageUrl }}
+                    style={styles.profileImage}
+                    />
+                    <View>
                     <Text style={styles.username}>{post.user.username}</Text>
                     <Text style={styles.date}>{new Date(post.createdAt).toLocaleDateString()}</Text>
                     <Text style={styles.topic}>Topic: {post.topic.content}</Text>
+                    </View>
                 </View>
             </View>
             <Image
@@ -229,6 +237,12 @@ const styles = StyleSheet.create({
         // width: "100%",
         height: 300,
         width: 300,
+    },
+        profileImage: {
+    width: 40,
+    height: 40,
+    borderRadius: 20,
+    marginRight: 8,
     },
     footer: {
         flexDirection: "row",

@@ -7,10 +7,16 @@ import com.example.repositories.UserRepository
 import akka.http.scaladsl.server.Directives._
 import com.example.models.JsonFormats._
 import akka.http.scaladsl.marshallers.sprayjson.SprayJsonSupport._
+import akka.http.scaladsl.model.StatusCodes
 import akka.http.scaladsl.server.{Directive1, Route}
+import com.example.models.DTO.UserDTO
+import com.example.service.UserService
 import com.example.utils.AuthUtils
 
-class UserRoutes(userRepo: UserRepository) {
+import scala.concurrent.{ExecutionContext, Future}
+
+class UserRoutes(userRepo: UserRepository,
+                 userService: UserService)(implicit ec: ExecutionContext) {
   val authenticate: Directive1[Long] = AuthUtils.authenticateToken
 
   val routes: Route = {
@@ -21,7 +27,14 @@ class UserRoutes(userRepo: UserRepository) {
             get {
               parameter("username") { username =>
                 onSuccess(userRepo.searchByUsername(username)) { users =>
-                  complete(users)
+                  if (users.isEmpty) {
+                    complete(StatusCodes.NotFound, "No users found")
+                  } else {
+                    val userDTOsF: Future[Seq[UserDTO]] = Future.sequence(users.map(user => userService.toUserDTO(user)))
+                    onSuccess(userDTOsF) { userDTOs =>
+                      complete(userDTOs)
+                    }
+                  }
                 }
               }
             }

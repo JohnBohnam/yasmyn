@@ -32,6 +32,15 @@ class PostRepository(implicit ec: ExecutionContext) {
     db.run(query.result)
   }
 
+  def getLatestPost(userId: Long): Future[Option[Post]] = {
+    val query = PostTable.posts
+      .filter(_.userId === userId)
+      .sortBy(_.createdAt.desc)
+      .take(1)
+
+    db.run(query.result.headOption)
+  }
+
   def getAllPosts(limit: Int, sortByLikes: Boolean, afterId: Option[Long], topicId: Option[Long]): Future[Seq[Post]] = {
     val baseQuery = PostTable.posts
     val filteredQuery = topicId match {

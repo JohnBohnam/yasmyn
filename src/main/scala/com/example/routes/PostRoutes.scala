@@ -10,7 +10,7 @@ import ch.megard.akka.http.cors.scaladsl.CorsDirectives.cors
 import com.example.config.AuthConfig.corsSettings
 import com.example.models.JsonFormats._
 import com.example.models.Post
-import com.example.models.response.PostResponse
+import com.example.models.DTO.PostDTO
 import com.example.repositories.{LikeRepository, PictureRepository, PostRepository, TopicRepository}
 import com.example.service.PostService
 import com.example.utils.AuthUtils
@@ -80,7 +80,7 @@ class PostRoutes(pictureRepository: PictureRepository,
             onComplete(postRepository.getAllPosts(limit, sortByLikes,  afterId, topicId)) {
               case Success(posts) =>
                 // Convert each Post to Future[Option[PostResponse]]
-                val enrichedPostsFut: Future[Seq[PostResponse]] =
+                val enrichedPostsFut: Future[Seq[PostDTO]] =
                   Future.sequence(
                     posts.map(postService.toPostResponse) // Future[Option[PostResponse]]
                   ).map(_.flatten) // Filter out None values

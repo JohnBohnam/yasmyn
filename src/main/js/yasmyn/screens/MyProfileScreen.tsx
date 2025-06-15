@@ -208,17 +208,16 @@ const MyProfile: React.FC = () => {
             </View>
         );
     }
+    
+    let imagePrefix = 'http://localhost:8080/uploads/';
 
-    console.log("Rendering component");
-    console.log("observed length:", observed.length);
-    console.log("observing length:", observing.length);
 
     return (
         <View style={styles.container}>
             {/* Profile Info */}
             <View style={styles.profileContainer}>
                 <Image
-                    source={{uri: "https://via.placeholder.com/100"}}
+                    source={{uri: imagePrefix + myInfo.imageUrl}}
                     style={styles.profileImage}
                 />
                 <Text style={styles.profileName}>{myInfo.username}</Text>
