@@ -33,3 +33,4 @@ export interface Post {
   topic: Topic;
   isLiked: boolean;
 }
+

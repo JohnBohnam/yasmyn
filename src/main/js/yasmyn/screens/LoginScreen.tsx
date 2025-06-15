@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import { View, Text, TextInput, Button, StyleSheet, Alert } from 'react-native';
 import AsyncStorage from '@react-native-async-storage/async-storage';
+import {API_BASE_URL} from "../constants";
 
 // @ts-ignore
 export default function LoginScreen({ navigation }) {
@@ -10,7 +11,7 @@ export default function LoginScreen({ navigation }) {
     const handleLogin = async () => {
         // Replace with your API endpoint
         try {
-            let response = await fetch('http://localhost:8080/auth/login', {
+            let response = await fetch(`${API_BASE_URL}/auth/login`, {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({

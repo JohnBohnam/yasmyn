@@ -14,6 +14,7 @@ import {
 import * as ImagePicker from 'expo-image-picker';
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import {useNavigation} from "@react-navigation/native";
+import {API_BASE_URL} from "../constants";
 
 const { width } = Dimensions.get('window');
 const CIRCLE = 80;
@@ -37,7 +38,7 @@ async function uploadImage(imageUri: string, setImageUri: (uri: string | null) =
             } as any);
         }
 
-        const response = await fetch('http://localhost:8080/posts', {
+        const response = await fetch('https://yasmyn-production.up.railway.app/posts', {
             method: 'POST',
             body: formData,
             headers: {
@@ -81,7 +82,7 @@ export default function MainScreen({ navigation }) {
 
     const fetchTopic = async () => {
         try {
-            const response = await fetch('http://localhost:8080/topic/today');
+            const response = await fetch(`${API_BASE_URL}/topic/today`);
             if (!response.ok) {
                 throw new Error(`HTTP error! status: ${response.status}`);
             }

@@ -11,8 +11,9 @@ import {
     Alert,
 } from "react-native";
 import {User} from "../Model";
+import {API_BASE_URL} from "../constants";
 
-const API_URL = "http://localhost:8080";
+const API_URL = API_BASE_URL;
 
 const MyProfile: React.FC = () => {
     const [observed, setObserved] = useState<User[]>([]);
