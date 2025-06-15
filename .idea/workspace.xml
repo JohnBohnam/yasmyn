@@ -5,17 +5,7 @@
   </component>
   <component name="ChangeListManager">
     <list default="true" id="01c83111-4ee3-4dad-94b3-271b7a07d183" name="Changes" comment="">
-      <change afterPath="$PROJECT_DIR$/src/main/scala/com/example/time/TopicGenerator.scala" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/main/scala/com/example/Main.scala" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/scala/com/example/Main.scala" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/main/scala/com/example/database/tables/TopicTable.scala" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/scala/com/example/database/tables/TopicTable.scala" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/main/scala/com/example/models/JsonFormats.scala" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/scala/com/example/models/JsonFormats.scala" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/main/scala/com/example/models/Topic.scala" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/scala/com/example/models/Topic.scala" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/main/scala/com/example/repositories/PostRepository.scala" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/scala/com/example/repositories/PostRepository.scala" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/main/scala/com/example/repositories/TopicRepository.scala" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/scala/com/example/repositories/TopicRepository.scala" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/main/scala/com/example/routes/AdminRoutes.scala" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/scala/com/example/routes/AdminRoutes.scala" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/main/scala/com/example/routes/PostRoutes.scala" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/scala/com/example/routes/PostRoutes.scala" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/main/scala/com/example/routes/TopicRoutes.scala" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/scala/com/example/routes/TopicRoutes.scala" afterDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
@@ -190,7 +180,8 @@
       <workItem from="1749655304679" duration="880000" />
       <workItem from="1749799229258" duration="616000" />
       <workItem from="1749828363196" duration="160000" />
-      <workItem from="1749892396922" duration="25662000" />
+      <workItem from="1749892396922" duration="27969000" />
+      <workItem from="1750022259639" duration="1826000" />
     </task>
     <servers />
   </component>
