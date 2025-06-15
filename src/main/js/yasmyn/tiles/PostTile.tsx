@@ -97,6 +97,10 @@ const PostTile: React.FC<{ post: Post; disableLike?: boolean, place?: number }> 
         fetchObserved(post.user.id, setObserveDisabled);
     }, []);
 
+    useEffect(() => {
+        setLiked(post.isLiked);
+    }, [post.id, post.isLiked]);
+
     const toggleLike = async () => {
         const success = await sendLike(post.id, liked);
         if (success) {
@@ -126,9 +130,8 @@ const PostTile: React.FC<{ post: Post; disableLike?: boolean, place?: number }> 
                  {!disableLike ? <Button
                     title={`${liked ? '💔' : '❤️'} ${likesCount}`}
                     onPress={toggleLike}
-                /> : place == -1 && <View style={styles.footer}>
-                     LIKES: {likesCount}
-                 </View>}
+                /> : place == -1 && <Text>LIKES: {likesCount}</Text>
+            }
                 <Button disabled={observeDisabled}
                     title={`🙋‍♂️ `} onPress={() => observeUserById(post.user.id, setObserveDisabled)} />
             </View>
