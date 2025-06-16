@@ -20,7 +20,7 @@ class PostService(
 
   private val formatter = DateTimeFormatter.ISO_INSTANT
 
-  def toPostResponse(post: Post): Future[Option[PostDTO]] = {
+  def toPostDTO(post: Post): Future[Option[PostDTO]] = {
     val userF = userRepository.findById(post.userId)
     val pictureF = pictureRepository.findById(post.pictureId)
     val commentsF = commentRepository.findByPostId(post.id)
@@ -59,7 +59,7 @@ class PostService(
 
 
   def toPostResponses(posts: Seq[Post]): Future[Seq[PostDTO]] = {
-    Future.sequence(posts.map(toPostResponse)).map(_.flatten)
+    Future.sequence(posts.map(toPostDTO)).map(_.flatten)
   }
 
   private def formatTimestamp(ts: Timestamp): String = {

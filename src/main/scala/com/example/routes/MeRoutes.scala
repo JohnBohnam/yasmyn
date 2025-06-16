@@ -2,7 +2,7 @@ package com.example.routes
 
 import akka.http.scaladsl.server.Directives._
 import akka.http.scaladsl.model.StatusCodes
-import com.example.repositories.{ObservedRepository, UserRepository}
+import com.example.repositories.{ObservedRepository, PostRepository, UserRepository}
 import com.example.utils.AuthUtils
 import spray.json._
 import akka.http.scaladsl.marshallers.sprayjson.SprayJsonSupport._
@@ -10,9 +10,9 @@ import akka.http.scaladsl.marshalling.ToEntityMarshaller
 import akka.http.scaladsl.server.{Directive1, Route}
 import ch.megard.akka.http.cors.scaladsl.CorsDirectives.cors
 import com.example.config.AuthConfig.corsSettings
-import com.example.models.DTO.UserDTO
+import com.example.models.DTO.{PostDTO, UserDTO}
 import com.example.models.User
-import com.example.service.UserService
+import com.example.service.{PostService, UserService}
 
 import scala.concurrent.{ExecutionContext, Future}
 import scala.util.{Failure, Success}
@@ -23,7 +23,7 @@ object ObserveJsonProtocol extends DefaultJsonProtocol {
   implicit val observeRequestFormat: RootJsonFormat[ObserveRequest] = jsonFormat1(ObserveRequest)
 }
 
-class MeRoutes(observedRepo: ObservedRepository, userRepository: UserRepository, userService: UserService)(implicit ec: ExecutionContext) {
+class MeRoutes(observedRepo: ObservedRepository, userRepository: UserRepository, userService: UserService, postRepository: PostRepository, postService: PostService)(implicit ec: ExecutionContext) {
 
   import ObserveJsonProtocol.observeRequestFormat
   import com.example.models.JsonFormats._
@@ -103,7 +103,32 @@ class MeRoutes(observedRepo: ObservedRepository, userRepository: UserRepository,
                   }
                 }
               }
+            },
+            path("posts") {
+              get {
+                // all posts of the user
+                parameters(
+                  "limit".as[Int].withDefault(20),
+                  "afterId".as[Long].?,
+                ) { (limit, afterId) =>
+                  onComplete(postRepository.getPostsByUser(userId, limit, afterId)) {
+                    case Success(posts) =>
+                      val enrichedPostsFut: Future[Seq[PostDTO]] =
+                        Future.sequence(
+                          posts.map(postService.toPostDTO)
+                        ).map(_.flatten)
+
+                      onSuccess(enrichedPostsFut) { postResponses =>
+                        complete(StatusCodes.OK, postResponses)
+                      }
+
+                    case Failure(ex) =>
+                      complete(StatusCodes.InternalServerError, s"Error fetching posts: ${ex.getMessage}")
+                  }
+                }
+              }
             }
+
           )
         }
       }

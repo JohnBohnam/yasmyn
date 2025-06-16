@@ -9,9 +9,12 @@ import {
     Image,
     StyleSheet,
     Alert,
+    Platform,
+    ScrollView,
 } from "react-native";
-import {User} from "../Model";
+import {Post, User} from "../Model";
 import {API_BASE_URL} from "../constants";
+import PostTile from "../tiles/PostTile";
 
 const API_URL = API_BASE_URL;
 
@@ -23,6 +26,26 @@ const MyProfile: React.FC = () => {
     const [searchResults, setSearchResults] = useState<User[]>([]);
     const [searchQuery, setSearchQuery] = useState("");
     const [isSearching, setIsSearching] = useState(false);
+    const [myPosts, setMyPosts] = useState<Post[]>([]);
+
+    const fetchMyPosts = async () => {
+        const authToken = await AsyncStorage.getItem("authToken");
+        if (!authToken) throw new Error("Authentication token is missing");
+
+        try {
+            const response = await fetch(`${API_URL}/me/posts`, {
+                method: "GET",
+                headers: {Authorization: `Bearer ${authToken}`},
+            });
+
+            if (!response.ok) throw new Error("Failed to fetch user posts");
+
+            const posts: Post[] = await response.json();
+            setMyPosts(posts);
+        } catch (error) {
+            Alert.alert("Error", "Could not load your posts");
+        }
+    };
 
     useEffect(() => {
         const delayDebounce = setTimeout(() => {
@@ -163,6 +186,7 @@ const MyProfile: React.FC = () => {
 
     useEffect(() => {
         fetchObserved();
+        fetchMyPosts();
         fetchMyInfo();
     }, []);
 
@@ -174,18 +198,37 @@ const MyProfile: React.FC = () => {
             </View>
         );
     }
-    
+
     let imagePrefix = 'http://localhost:8080/uploads/';
 
+
+    const UserRow = ({
+                         user,
+                         buttonTitle,
+                         onButtonPress,
+                         buttonColor,
+                     }: {
+        user: typeof observed[0];
+        buttonTitle?: string;
+        onButtonPress?: (id: number) => void;
+        buttonColor?: string;
+    }) => (
+        <View style={styles.friendRow}>
+            <View style={styles.userInfo}>
+                <Image source={{uri: imagePrefix + user.imageUrl}} style={styles.friendImage}/>
+                <Text style={{marginLeft: 8}}>{user.username}</Text>
+            </View>
+            {buttonTitle && onButtonPress && (
+                <Button title={buttonTitle} onPress={() => onButtonPress(user.id)} color={buttonColor}/>
+            )}
+        </View>
+    );
 
     return (
         <View style={styles.container}>
             {/* Profile Info */}
             <View style={styles.profileContainer}>
-                <Image
-                    source={{uri: imagePrefix + myInfo.imageUrl}}
-                    style={styles.profileImage}
-                />
+                <Image source={{uri: imagePrefix + myInfo.imageUrl}} style={styles.profileImage}/>
                 <Text style={styles.profileName}>{myInfo.username}</Text>
                 <Text>
                     You observe {observed.length} {observed.length === 1 ? "user" : "users"}.
@@ -202,25 +245,13 @@ const MyProfile: React.FC = () => {
                     data={observed}
                     extraData={observed}
                     keyExtractor={(item) => item.id.toString()}
-                    renderItem={({ item }) => (
-                    <View style={styles.friendRow}>
-                        <View style={styles.userInfo}>
-                            <Image
-                                source={{ uri: imagePrefix + item.imageUrl }}
-                                style={styles.friendImage}
-                            />
-                            <Text style={{ marginLeft: 8 }}>{item.username}</Text>
-                        </View>
-                        <Button
-                            title="Remove"
-                            onPress={() => removeObserved(item.id)}
-                            color="red"
-                        />
-                    </View>
-                )}
+                    renderItem={({item}) => (
+                        <UserRow user={item} buttonTitle="Remove" onButtonPress={removeObserved} buttonColor="red"/>
+                    )}
                 />
             </View>
 
+            {/* Search Users */}
             <View style={styles.section}>
                 <Text style={styles.sectionTitle}>Search Users by Username</Text>
                 <TextInput
@@ -234,22 +265,12 @@ const MyProfile: React.FC = () => {
                     <FlatList
                         data={searchResults}
                         keyExtractor={(item) => item.id.toString()}
-                        renderItem={({ item }) => (
-                        <View style={styles.friendRow}>
-                            <View style={styles.userInfo}>
-                                <Image
-                                    source={{ uri: imagePrefix + item.imageUrl }}
-                                    style={styles.friendImage}
-                                />
-                                <Text style={{ marginLeft: 8 }}>{item.username}</Text>
-                            </View>
-                            <Button title="Observe" onPress={() => observeUserById(item.id)} />
-                        </View>
-                    )}
+                        renderItem={({item}) => (
+                            <UserRow user={item} buttonTitle="Observe" onButtonPress={observeUserById}/>
+                        )}
                     />
                 )}
             </View>
-
 
             {/* Observing List */}
             <View style={styles.section}>
@@ -258,21 +279,34 @@ const MyProfile: React.FC = () => {
                     data={observing}
                     extraData={observing}
                     keyExtractor={(item) => item.id.toString()}
-                    renderItem={({ item }) => (
-                    <View style={styles.friendRow}>
-                        <View style={styles.userInfo}>
-                            <Image
-                                source={{ uri: imagePrefix + item.imageUrl }}
-                                style={styles.friendImage}
-                            />
-                            <Text style={{ marginLeft: 8 }}>{item.username}</Text>
-                        </View>
-                    </View>
-                )}
+                    renderItem={({item}) => <UserRow user={item}/>}
                 />
             </View>
+
+            {/* User Posts List */}
+            {Platform.OS === "web" ? (
+                <ScrollView style={styles.webScroller}>
+                    {myPosts.map((post, i) => (
+                        <View key={post.id.toString()}>
+                            <PostTile post={post} disableLike/>
+                        </View>
+                    ))}
+                </ScrollView>
+            ) : (
+                <FlatList
+                    data={myPosts}
+                    keyExtractor={(item) => item.id.toString()}
+                    renderItem={({item}) => (
+                        <View>
+                            <PostTile post={item} disableLike/>
+                        </View>
+                    )}
+                    contentContainerStyle={{paddingBottom: 20}}
+                />
+            )}
         </View>
     );
+
 };
 
 export default MyProfile;
@@ -327,5 +361,9 @@ const styles = StyleSheet.create({
         flexDirection: 'row',
         alignItems: 'center',
         flexShrink: 1,  // so username text doesn't push buttons off screen
+    },
+    webScroller: {
+        height: 100,
+        overflow: 'scroll',
     },
 });

@@ -82,7 +82,7 @@ class PostRoutes(pictureRepository: PictureRepository,
                 // Convert each Post to Future[Option[PostResponse]]
                 val enrichedPostsFut: Future[Seq[PostDTO]] =
                   Future.sequence(
-                    posts.map(postService.toPostResponse) // Future[Option[PostResponse]]
+                    posts.map(postService.toPostDTO) // Future[Option[PostResponse]]
                   ).map(_.flatten) // Filter out None values
 
                 onComplete(enrichedPostsFut) {
