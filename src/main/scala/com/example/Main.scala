@@ -91,7 +91,7 @@ object Main extends App {
   TopicGenerator.start(topicRepository)
 
   // Start server
-  Http().newServerAt("localhost", 8080).bind(appRoutes)
+  Http().newServerAt("0.0.0.0", 8080).bind(appRoutes)
   println("Server running at http://localhost:8080/")
 
 
