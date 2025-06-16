@@ -50,13 +50,17 @@ class MeRoutes(observedRepo: ObservedRepository, userRepository: UserRepository,
             path("observe") {
               post {
                 entity(as[ObserveRequest]) { req =>
-                  onComplete(observedRepo.observe(userId, req.observedUserId)) {
-                    case Success(_) =>
-                      complete(StatusCodes.OK)
-                    case Failure(ex: IllegalArgumentException) if ex.getMessage == "User already observed" =>
-                      complete(StatusCodes.Conflict, "User already observed")
-                    case Failure(ex) =>
-                      complete(StatusCodes.InternalServerError, "Unexpected error")
+                  if (req.observedUserId == userId) {
+                    complete(StatusCodes.BadRequest, "Cannot observe yourself")
+                  } else {
+                    onComplete(observedRepo.observe(userId, req.observedUserId)) {
+                      case Success(_) =>
+                        complete(StatusCodes.OK)
+                      case Failure(ex: IllegalArgumentException) if ex.getMessage == "User already observed" =>
+                        complete(StatusCodes.Conflict, "User already observed")
+                      case Failure(ex) =>
+                        complete(StatusCodes.InternalServerError, "Unexpected error")
+                    }
                   }
                 }
               } ~

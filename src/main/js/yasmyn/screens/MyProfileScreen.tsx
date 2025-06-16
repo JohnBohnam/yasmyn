@@ -43,7 +43,9 @@ const MyProfile: React.FC = () => {
 
                     if (!res.ok) throw new Error("Search failed");
                     const users: User[] = await res.json();
-                    setSearchResults(users);
+                    const myId = await AsyncStorage.getItem("userId");
+                    const filteredUsers = users.filter(user => user.id.toString() !== myId);
+                    setSearchResults(filteredUsers);
                 } catch (error) {
                     console.error("Search error:", error);
                     setSearchResults([]);

@@ -2,6 +2,7 @@ import React, { useState } from 'react';
 import { View, Text, TextInput, Button, StyleSheet, Alert } from 'react-native';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import {API_BASE_URL} from "../constants";
+import { showAlert } from '../utils';
 
 // @ts-ignore
 export default function LoginScreen({ navigation }) {
@@ -9,9 +10,8 @@ export default function LoginScreen({ navigation }) {
     const [password, setPassword] = useState('');
 
     const handleLogin = async () => {
-        // Replace with your API endpoint
         try {
-            let response = await fetch(`${API_BASE_URL}/auth/login`, {
+            const response = await fetch(`${API_BASE_URL}/auth/login`, {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({
@@ -19,16 +19,18 @@ export default function LoginScreen({ navigation }) {
                     password: password,
                 }),
             });
-            let data = await response.json();
+
+            const data = await response.json();
+
             if (response.ok && data.token) {
                 await AsyncStorage.setItem('authToken', data.token);
+                await AsyncStorage.setItem('userId', data.userId.toString());
                 navigation.reset({ index: 0, routes: [{ name: 'Main' }] });
             } else {
-                Alert.alert('Login failed', data.message || 'Invalid credentials');
+                showAlert('Login failed', data.message || 'Invalid credentials');
             }
-        } catch (err) {
-            // @ts-ignore
-            Alert.alert('Error', err.message);
+        } catch (err: any) {
+            showAlert('Error', err.message);
         }
     };
 

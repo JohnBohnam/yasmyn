@@ -38,7 +38,9 @@ async function uploadImage(imageUri: string, setImageUri: (uri: string | null) =
             } as any);
         }
 
-        const response = await fetch('https://yasmyn-production.up.railway.app/posts', {
+        const url = `${API_BASE_URL}/posts`;
+
+        const response = await fetch(url, {
             method: 'POST',
             body: formData,
             headers: {

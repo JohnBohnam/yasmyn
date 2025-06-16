@@ -76,8 +76,9 @@ const fetchObserved = async (id: number, setObserveDisabled: (disabled: boolean)
 
 
         const observedUsers: User[] = await obsRes.json();
+        const myId = await AsyncStorage.getItem("userId");
 
-        if (observedUsers.some((user) => user.id === id)) {
+        if (observedUsers.some((user) => user.id === id) || id.toString() === myId) {
             setObserveDisabled(true);
         } else {
             setObserveDisabled(false);

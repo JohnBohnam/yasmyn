@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
-import { View, Text, TextInput, Button, StyleSheet, Alert } from 'react-native';
+import { View, Text, TextInput, Button, StyleSheet, Alert, Platform } from 'react-native';
 import {API_BASE_URL} from "../constants";
+import { showAlert } from '../utils';
 
 // @ts-ignore
 export default function RegisterScreen({ navigation }) {
@@ -8,10 +9,10 @@ export default function RegisterScreen({ navigation }) {
     const [password, setPassword] = useState('');
     const [username, setUsername] = useState('');
 
+
     const handleRegister = async () => {
-        // Replace with your API endpoint
         try {
-            let response = await fetch(`${API_BASE_URL}/auth/register`, {
+            const response = await fetch(`${API_BASE_URL}/auth/register`, {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({
@@ -20,22 +21,24 @@ export default function RegisterScreen({ navigation }) {
                     password: password,
                 }),
             });
+
             if (response.ok) {
-                Alert.alert('Success', 'Registered successfully!', [
-                    { text: 'OK', onPress: () => navigation.navigate('Login') }
-                ]);
+                showAlert('Success', 'Registered successfully!', () => {
+                    navigation.navigate('Login');
+                });
                 console.log('Registration successful');
             } else {
-                console.log("womp.1")
-                let error = await response.json();
-                Alert.alert('Error', error.message || 'Registration failed');
+                console.log('womp.1');
+                const error = await response.json();
+                showAlert('Error', error.message || 'Registration failed');
                 console.log('Registration failed', error);
             }
-        } catch (err : any) {
-            console.log("womp.2")
-            Alert.alert('Error', err.message);
+        } catch (err: any) {
+            console.log('womp.2');
+            showAlert('Error', err.message);
         }
     };
+
 
     return (
         <View style={styles.container}>
