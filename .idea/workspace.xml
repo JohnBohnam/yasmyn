@@ -4,7 +4,15 @@
     <option name="autoReloadType" value="SELECTIVE" />
   </component>
   <component name="ChangeListManager">
-    <list default="true" id="01c83111-4ee3-4dad-94b3-271b7a07d183" name="Changes" comment="kocham sbt" />
+    <list default="true" id="01c83111-4ee3-4dad-94b3-271b7a07d183" name="Changes" comment="kocham sbt">
+      <change beforePath="$PROJECT_DIR$/.idea/scala_compiler.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/scala_compiler.xml" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/main/scala/com/example/config/AuthConfig.scala" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/scala/com/example/config/AuthConfig.scala" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/main/scala/com/example/routes/AdminRoutes.scala" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/scala/com/example/routes/AdminRoutes.scala" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/main/scala/com/example/routes/AuthRoutes.scala" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/scala/com/example/routes/AuthRoutes.scala" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/main/scala/com/example/routes/PictureRoutes.scala" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/scala/com/example/routes/PictureRoutes.scala" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/main/scala/com/example/routes/TopicRoutes.scala" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/scala/com/example/routes/TopicRoutes.scala" afterDir="false" />
+    </list>
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
     <option name="HIGHLIGHT_NON_ACTIVE_CHANGELIST" value="false" />
@@ -114,8 +122,9 @@
   </component>
   <component name="RunManager" selected="Application.Main">
     <configuration name="Main" type="Application" factoryName="Application" temporary="true">
+      <option name="ALTERNATIVE_JRE_PATH" value="21" />
+      <option name="ALTERNATIVE_JRE_PATH_ENABLED" value="true" />
       <option name="MAIN_CLASS_NAME" value="com.example.Main" />
-      <module name="yasmyn" />
       <extension name="coverage">
         <pattern>
           <option name="PATTERN" value="com.example.*" />
@@ -189,7 +198,7 @@
       <workItem from="1749799229258" duration="616000" />
       <workItem from="1749828363196" duration="160000" />
       <workItem from="1749892396922" duration="27969000" />
-      <workItem from="1750022259639" duration="6477000" />
+      <workItem from="1750022259639" duration="8033000" />
     </task>
     <task id="LOCAL-00001" summary="kocham sbt">
       <option name="closed" value="true" />

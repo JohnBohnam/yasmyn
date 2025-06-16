@@ -5,8 +5,9 @@ import akka.http.scaladsl.marshallers.sprayjson.SprayJsonSupport._
 import akka.http.scaladsl.model.StatusCodes
 import akka.http.scaladsl.server.Directives._
 import akka.http.scaladsl.server.Route
+import ch.megard.akka.http.cors.scaladsl.CorsDirectives.cors
 import com.example.Globals
-import com.example.config.AuthConfig.authenticateAdmin
+import com.example.config.AuthConfig.{authenticateAdmin, corsSettings}
 import com.example.models.JsonFormats._
 import com.example.repositories.TopicRepository
 import spray.json.RootJsonFormat
@@ -21,7 +22,7 @@ class AdminRoutes(topicRepository: TopicRepository)(implicit system: ActorSystem
 
   implicit val topicSetRequestFormat: RootJsonFormat[TopicSetRequest] = jsonFormat1(TopicSetRequest)
 
-  val adminRoutes: Route =
+  val adminRoutes: Route = cors(corsSettings) {
     pathPrefix("admin" / "topic") {
       authenticateAdmin {
         concat(
@@ -50,6 +51,7 @@ class AdminRoutes(topicRepository: TopicRepository)(implicit system: ActorSystem
         )
       }
     }
+  }
 
 
 }
