@@ -24,7 +24,7 @@ object Main extends App {
 
   // do dropowania, czasem sie przydaje
 
-  val dropAction = (
+  /*val dropAction = (
     UserTable.users.schema ++
     PictureTable.pictures.schema ++
    PostTable.posts.schema ++
@@ -34,7 +34,7 @@ object Main extends App {
   ObservedTable.observed.schema
       ).dropIfExists
 
-  DatabaseConfig.db.run(dropAction)
+  DatabaseConfig.db.run(dropAction)*/
 
 
   val setup = (
