@@ -7,6 +7,7 @@ import akka.http.scaladsl.server.Directives._
 import akka.http.scaladsl.server.{Directive1, Route}
 import akka.stream.Materializer
 import ch.megard.akka.http.cors.scaladsl.CorsDirectives.cors
+import com.example.config.AuthConfig.corsSettings
 import com.example.models.JsonFormats._
 import com.example.models.Picture
 import com.example.repositories.PictureRepository
@@ -28,7 +29,7 @@ class PictureRoutes(pictureRepository: PictureRepository)(implicit system: Actor
 
   implicit val pictureFormat: RootJsonFormat[Picture] = jsonFormat5(Picture)
 
-  val routes: Route = cors() {
+  val routes: Route = cors(corsSettings) {
     pathPrefix("pictures") {
       authenticate { userId =>
         post {

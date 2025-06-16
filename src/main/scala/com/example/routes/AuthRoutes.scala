@@ -17,8 +17,8 @@ class AuthRoutes(userRepository: UserRepository)(implicit ec: ExecutionContext) 
   import com.example.models.JsonFormats._
 
   val routes: Route = {
-    pathPrefix("auth") {
-      cors(corsSettings) {
+    cors(corsSettings) {
+      pathPrefix("auth") {
         concat(
           path("register") {
             post {

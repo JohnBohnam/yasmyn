@@ -11,11 +11,7 @@ object AuthConfig {
   val adminToken: String = "kokoko"
 
   val corsSettings: CorsSettings = CorsSettings.defaultSettings.withAllowedOrigins(
-    HttpOriginMatcher(
-      HttpOrigin("http://localhost:3000"),
-      HttpOrigin("http://localhost:5173"),
-      HttpOrigin("http://localhost:8081")
-    )
+    HttpOriginMatcher.*
   ).withAllowedMethods(Seq(
     HttpMethods.GET,
     HttpMethods.POST,

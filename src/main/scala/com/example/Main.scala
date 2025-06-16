@@ -24,7 +24,7 @@ object Main extends App {
 
   // do dropowania, czasem sie przydaje
 
-  val dropAction = (
+  /*val dropAction = (
     UserTable.users.schema ++
     PictureTable.pictures.schema ++
    PostTable.posts.schema ++
@@ -34,7 +34,7 @@ object Main extends App {
   ObservedTable.observed.schema
       ).dropIfExists
 
-  DatabaseConfig.db.run(dropAction)
+  DatabaseConfig.db.run(dropAction)*/
 
 
   val setup = (
@@ -91,7 +91,7 @@ object Main extends App {
   TopicGenerator.start(topicRepository)
 
   // Start server
-  Http().newServerAt("localhost", 8080).bind(appRoutes)
+  Http().newServerAt("0.0.0.0", 8080).bind(appRoutes)
   println("Server running at http://localhost:8080/")
 
 
