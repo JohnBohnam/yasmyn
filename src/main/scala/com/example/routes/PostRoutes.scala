@@ -6,6 +6,7 @@ import akka.http.scaladsl.model.StatusCodes
 import akka.http.scaladsl.server.Directives._
 import akka.http.scaladsl.server.Route
 import akka.stream.Materializer
+import akka.stream.scaladsl.FileIO
 import ch.megard.akka.http.cors.scaladsl.CorsDirectives.cors
 import com.example.config.AuthConfig.corsSettings
 import com.example.models.JsonFormats._
@@ -15,7 +16,7 @@ import com.example.repositories.{LikeRepository, PictureRepository, PostReposito
 import com.example.service.PostService
 import com.example.utils.AuthUtils
 
-import java.nio.file.Paths
+import java.nio.file.{Files, Paths}
 import java.util.UUID
 import scala.concurrent.{ExecutionContext, Future}
 import scala.util.{Failure, Success}
@@ -39,11 +40,16 @@ class PostRoutes(pictureRepository: PictureRepository,
         post {
           fileUpload("image") { case (metadata, byteSource) =>
             val filename = s"${UUID.randomUUID()}-${metadata.fileName}"
-            val filePath = s"uploads/$filename"
+
+            val uploadDir = Paths.get("uploads")
+            if (!Files.exists(uploadDir)) {
+              Files.createDirectories(uploadDir)
+            }
+            val filePath = uploadDir.resolve(filename)
 
 
             // 1. Save the uploaded file to disk
-            onComplete(byteSource.runWith(akka.stream.scaladsl.FileIO.toPath(Paths.get(filePath)))) {
+            onComplete(byteSource.runWith(FileIO.toPath(filePath))) {
               case Success(_) =>
                 // 2. Create the Picture first
                 println(s"Saving picture with filename: $filename")
