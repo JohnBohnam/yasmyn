@@ -185,7 +185,7 @@ const MyProfile: React.FC = () => {
         );
     }
 
-    let imagePrefix = 'http://localhost:8080/uploads/';
+    let imagePrefix = API_BASE_URL+ '/uploads/';
 
 
     const UserRow = ({

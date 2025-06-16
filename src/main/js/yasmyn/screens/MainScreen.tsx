@@ -168,7 +168,8 @@ export default function MainScreen({ navigation }) {
     }
 };
 
-    let imagePrefix = 'http://localhost:8080/uploads/'
+
+    let imagePrefix = API_BASE_URL + '/uploads/'
 
 
     return (
