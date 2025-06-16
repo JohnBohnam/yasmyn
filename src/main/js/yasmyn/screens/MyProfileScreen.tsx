@@ -15,6 +15,7 @@ import {
 import {Post, User} from "../Model";
 import {API_BASE_URL} from "../constants";
 import PostTile from "../tiles/PostTile";
+import { fetchMyInfo } from "../utils";
 
 const API_URL = API_BASE_URL;
 
@@ -84,25 +85,6 @@ const MyProfile: React.FC = () => {
     }, [searchQuery]);
 
 
-    const fetchMyInfo = async () => {
-        const authToken = await AsyncStorage.getItem("authToken");
-        if (!authToken) throw new Error("Authentication token is missing");
-
-        try {
-            const response = await fetch(`${API_URL}/me`, {
-                method: "GET",
-                headers: {Authorization: `Bearer ${authToken}`},
-            });
-
-            if (!response.ok) throw new Error("Failed to fetch user info");
-
-            const userInfo: User = await response.json();
-            setMyInfo(userInfo);
-        } catch (error) {
-            Alert.alert("Error", "Could not load user info");
-        }
-    };
-
     const fetchObserved = async () => {
         const authToken = await AsyncStorage.getItem("authToken");
         if (!authToken) throw new Error("Authentication token is missing");
@@ -132,6 +114,10 @@ const MyProfile: React.FC = () => {
         }
     };
 
+    const updateMyInfo = async () => {
+        setMyInfo(await fetchMyInfo()?? null);
+    }
+
 
     const observeUserById = async (id: number) => {
         try {
@@ -156,7 +142,7 @@ const MyProfile: React.FC = () => {
             setSearchResults([]);
             setNewFriendId("");
             await fetchObserved();
-            await fetchMyInfo();
+            await updateMyInfo();
         } catch (error) {
             Alert.alert("Error", "Could not add observed user");
         }
@@ -178,7 +164,7 @@ const MyProfile: React.FC = () => {
             });
 
             await fetchObserved();
-            await fetchMyInfo();
+            await updateMyInfo();
         } catch {
             Alert.alert("Error", "Could not remove observed user");
         }
@@ -187,7 +173,7 @@ const MyProfile: React.FC = () => {
     useEffect(() => {
         fetchObserved();
         fetchMyPosts();
-        fetchMyInfo();
+        updateMyInfo();
     }, []);
 
 

@@ -15,6 +15,8 @@ import * as ImagePicker from 'expo-image-picker';
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import {useNavigation} from "@react-navigation/native";
 import {API_BASE_URL} from "../constants";
+import { fetchMyInfo } from '../utils';
+import { User } from '../Model';
 
 const { width } = Dimensions.get('window');
 const CIRCLE = 80;
@@ -81,6 +83,14 @@ export default function MainScreen({ navigation }) {
     const [imageUri, setImageUri] = useState<string | null>(null);
     const [topicExpiration, setTopicExpiration] = useState<Date | null>(null);
     const [timeLeft, setTimeLeft] = useState<number>(0);
+    const [myInfo, setMyInfo] = useState<User | null>(null);
+
+    const updateMyInfo = async () => {
+        setMyInfo(await fetchMyInfo()?? null);  
+    }
+    useEffect(() => {
+        updateMyInfo();
+    }, []);
 
     const fetchTopic = async () => {
         try {
@@ -158,6 +168,8 @@ export default function MainScreen({ navigation }) {
     }
 };
 
+    let imagePrefix = 'http://localhost:8080/uploads/'
+
 
     return (
         <SafeAreaView style={styles.safe}>
@@ -167,6 +179,8 @@ export default function MainScreen({ navigation }) {
                     style={styles.circleButton}
                     onPress={() => navigation.navigate("MyProfile")}
                 > 
+                    <Image source = {myInfo?.imageUrl ? { uri: imagePrefix + myInfo.imageUrl } : require("../assets/user.png")}
+                           style={styles.imageButton} />
                     <Text style={styles.circleText}>My{"\n"}Profile</Text>
                 </TouchableOpacity>
             </View>
