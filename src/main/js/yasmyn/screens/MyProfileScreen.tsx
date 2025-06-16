@@ -61,14 +61,6 @@ const MyProfile: React.FC = () => {
     }, [searchQuery]);
 
 
-    useEffect(() => {
-        console.log("Updated observed:", observed);
-    }, [observed]);
-
-    useEffect(() => {
-        console.log("Updated observing:", observing);
-    }, [observing]);
-
     const fetchMyInfo = async () => {
         const authToken = await AsyncStorage.getItem("authToken");
         if (!authToken) throw new Error("Authentication token is missing");
@@ -104,13 +96,9 @@ const MyProfile: React.FC = () => {
 
             if (!obsRes.ok || !ingRes.ok) throw new Error("Fetch failed");
 
-            // console.log("jsons: ", obsRes.json(), ingRes.json());
 
             const observedUsers: User[] = await obsRes.json();
             const observingUsers: User[] = await ingRes.json();
-
-            console.log("Observed users:", observedUsers);
-            console.log("Observing users:", observingUsers);
 
             setObserved(observedUsers);
             setObserving(observingUsers);
@@ -121,31 +109,6 @@ const MyProfile: React.FC = () => {
         }
     };
 
-    const searchUsersByUsername = async () => {
-        const authToken = await AsyncStorage.getItem("authToken");
-        if (!authToken) {
-            Alert.alert("Error", "No auth token");
-            return;
-        }
-
-        if (!newFriendId.trim()) return;
-
-        try {
-            const response = await fetch(`${API_URL}/users/search?username=${encodeURIComponent(newFriendId)}`, {
-                headers: {
-                    Authorization: `Bearer ${authToken}`,
-                },
-            });
-
-            if (!response.ok) throw new Error("Search failed");
-
-            const users: User[] = await response.json();
-            setSearchResults(users);
-        } catch (err) {
-            Alert.alert("Error", "Failed to search users");
-            console.error(err);
-        }
-    };
 
     const observeUserById = async (id: number) => {
         try {
@@ -239,16 +202,22 @@ const MyProfile: React.FC = () => {
                     data={observed}
                     extraData={observed}
                     keyExtractor={(item) => item.id.toString()}
-                    renderItem={({item}) => (
-                        <View style={styles.friendRow}>
-                            <Text>{item.username}</Text>
-                            <Button
-                                title="Remove"
-                                onPress={() => removeObserved(item.id)}
-                                color="red"
+                    renderItem={({ item }) => (
+                    <View style={styles.friendRow}>
+                        <View style={styles.userInfo}>
+                            <Image
+                                source={{ uri: imagePrefix + item.imageUrl }}
+                                style={styles.friendImage}
                             />
+                            <Text style={{ marginLeft: 8 }}>{item.username}</Text>
                         </View>
-                    )}
+                        <Button
+                            title="Remove"
+                            onPress={() => removeObserved(item.id)}
+                            color="red"
+                        />
+                    </View>
+                )}
                 />
             </View>
 
@@ -265,12 +234,18 @@ const MyProfile: React.FC = () => {
                     <FlatList
                         data={searchResults}
                         keyExtractor={(item) => item.id.toString()}
-                        renderItem={({item}) => (
-                            <View style={styles.friendRow}>
-                                <Text>{item.username}</Text>
-                                <Button title="Observe" onPress={() => observeUserById(item.id)}/>
+                        renderItem={({ item }) => (
+                        <View style={styles.friendRow}>
+                            <View style={styles.userInfo}>
+                                <Image
+                                    source={{ uri: imagePrefix + item.imageUrl }}
+                                    style={styles.friendImage}
+                                />
+                                <Text style={{ marginLeft: 8 }}>{item.username}</Text>
                             </View>
-                        )}
+                            <Button title="Observe" onPress={() => observeUserById(item.id)} />
+                        </View>
+                    )}
                     />
                 )}
             </View>
@@ -283,11 +258,17 @@ const MyProfile: React.FC = () => {
                     data={observing}
                     extraData={observing}
                     keyExtractor={(item) => item.id.toString()}
-                    renderItem={({item}) => (
-                        <View style={styles.friendRow}>
-                            <Text>{item.username}</Text>
+                    renderItem={({ item }) => (
+                    <View style={styles.friendRow}>
+                        <View style={styles.userInfo}>
+                            <Image
+                                source={{ uri: imagePrefix + item.imageUrl }}
+                                style={styles.friendImage}
+                            />
+                            <Text style={{ marginLeft: 8 }}>{item.username}</Text>
                         </View>
-                    )}
+                    </View>
+                )}
                 />
             </View>
         </View>
@@ -334,7 +315,17 @@ const styles = StyleSheet.create({
     friendRow: {
         flexDirection: "row",
         justifyContent: "space-between",
-        alignItems: "center",
+        alignItems: "flex-start",
         paddingVertical: 6,
+    },
+    friendImage: {
+        width: 30,
+        height: 30,
+        borderRadius: 15,
+    },
+    userInfo: {
+        flexDirection: 'row',
+        alignItems: 'center',
+        flexShrink: 1,  // so username text doesn't push buttons off screen
     },
 });
